@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 28px;
-  background-color: var(--btn-fg);
+  background-color: var(--crust);
   border-bottom: 1px solid var(--surface0);
 }
 
@@ -20,14 +20,14 @@
 }
 
 .logo-icon {
-  background-color: rgba(114, 135, 253, 0.12);
+  background-color: rgba(186, 187, 241, 0.12);
   color: var(--lavender);
   font-size: 16px;
   font-weight: 500;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(114, 135, 253, 0.2);
+  border: 1px solid rgba(186, 187, 241, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -173,8 +173,8 @@
 }
 
 .cost-banner {
-  background-color: rgba(254, 100, 11, 0.08);
-  border: 1px solid rgba(254, 100, 11, 0.2);
+  background-color: rgba(239, 159, 118, 0.08);
+  border: 1px solid rgba(239, 159, 118, 0.2);
   border-radius: 12px;
   padding: 14px 20px;
   display: flex;
@@ -200,8 +200,8 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background-color: rgba(64, 160, 43, 0.08);
-  border: 1px solid rgba(64, 160, 43, 0.2);
+  background-color: rgba(166, 209, 137, 0.08);
+  border: 1px solid rgba(166, 209, 137, 0.2);
   border-radius: 12px;
   padding: 16px 20px;
   margin-bottom: 28px;
@@ -270,7 +270,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--green);
-  background-color: rgba(64, 160, 43, 0.1);
+  background-color: rgba(166, 209, 137, 0.1);
   padding: 3px 9px;
   border-radius: 20px;
 }
@@ -319,12 +319,12 @@
 }
 
 .badge-violation {
-  background-color: rgba(210, 15, 57, 0.12);
+  background-color: rgba(231, 130, 132, 0.12);
   color: var(--red);
 }
 
 .badge-warning {
-  background-color: rgba(254, 100, 11, 0.12);
+  background-color: rgba(239, 159, 118, 0.12);
   color: var(--peach);
 }
 
@@ -377,7 +377,7 @@
 
 .btn-primary {
   background-color: var(--lavender);
-  color: var(--btn-fg);
+  color: var(--crust);
   border: none;
 }
 
@@ -393,7 +393,7 @@
 
 .btn-secondary:hover {
   background-color: var(--lavender);
-  color: var(--btn-fg);
+  color: var(--crust);
 }
 
 .report-disclaimer {

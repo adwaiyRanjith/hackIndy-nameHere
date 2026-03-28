@@ -2,32 +2,32 @@
 
 :root {
   /* Background layers */
-  --base:    #eff1f5;
-  --mantle:  #e6e9ef;
-  --crust:   #dce0e8;
+  --base:    #303446;
+  --mantle:  #292c3c;
+  --crust:   #232634;
 
   /* Surface */
-  --surface0: #ccd0da;
-  --surface1: #bcc0cc;
-  --surface2: #acb0be;
+  --surface0: #414559;
+  --surface1: #51576d;
+  --surface2: #626880;
 
   /* Text */
-  --text:     #4c4f69;
-  --subtext1: #5c5f77;
-  --subtext0: #6c6f85;
-  --overlay1: #8c8fa1;
-  --overlay0: #9ca0b0;
+  --text:     #c6d0f5;
+  --subtext1: #b5bfe2;
+  --subtext0: #a5adce;
+  --overlay1: #838ba7;
+  --overlay0: #737994;
 
   /* Accents */
-  --lavender: #7287fd;
-  --green:    #40a02b;
-  --peach:    #fe640b;
-  --red:      #d20f39;
-  --mauve:    #8839ef;
-  --teal:     #179299;
+  --lavender: #babbf1;
+  --green:    #a6d189;
+  --peach:    #ef9f76;
+  --red:      #e78284;
+  --mauve:    #ca9ee6;
+  --teal:     #81c8be;
 
-  /* Button foreground — white for contrast on Latte accents */
-  --btn-fg:   #ffffff;
+  /* Button foreground — dark for contrast on Frappé accents */
+  --btn-fg:   #232634;
 }
 
 * {

@@ -169,7 +169,7 @@
 
 .radio-btn.radio-selected {
   border-color: var(--lavender);
-  background-color: rgba(114, 135, 253, 0.1);
+  background-color: rgba(186, 187, 241, 0.1);
   color: var(--lavender);
 }
 
@@ -177,7 +177,7 @@
   width: 100%;
   padding: 12px;
   background-color: var(--lavender);
-  color: var(--btn-fg);
+  color: var(--crust);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.925rem;
   font-weight: 500;

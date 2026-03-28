@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 28px;
-  background-color: var(--btn-fg);
+  background-color: var(--crust);
   border-bottom: 1px solid var(--surface0);
 }
 
@@ -32,8 +32,8 @@
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--lavender);
-  background-color: rgba(114, 135, 253, 0.1);
-  border: 1px solid rgba(114, 135, 253, 0.18);
+  background-color: rgba(186, 187, 241, 0.1);
+  border: 1px solid rgba(186, 187, 241, 0.18);
   padding: 5px 13px;
   border-radius: 20px;
 }
@@ -104,7 +104,7 @@
 
 .upload-area:hover {
   border-color: var(--lavender);
-  background-color: rgba(114, 135, 253, 0.04);
+  background-color: rgba(186, 187, 241, 0.04);
 }
 
 .upload-icon {
@@ -161,7 +161,7 @@
 
 .record-btn:hover {
   border-color: var(--lavender);
-  background-color: rgba(114, 135, 253, 0.06);
+  background-color: rgba(186, 187, 241, 0.06);
 }
 
 .record-hint {
@@ -246,8 +246,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background-color: rgba(64, 160, 43, 0.08);
-  border: 1px solid rgba(64, 160, 43, 0.2);
+  background-color: rgba(166, 209, 137, 0.08);
+  border: 1px solid rgba(166, 209, 137, 0.2);
   border-radius: 10px;
   padding: 14px 18px;
   color: var(--green);
@@ -315,12 +315,12 @@
 }
 
 .badge-violation {
-  background-color: rgba(210, 15, 57, 0.12);
+  background-color: rgba(231, 130, 132, 0.12);
   color: var(--red);
 }
 
 .badge-warning {
-  background-color: rgba(254, 100, 11, 0.12);
+  background-color: rgba(239, 159, 118, 0.12);
   color: var(--peach);
 }
 
@@ -358,7 +358,7 @@
   width: 100%;
   padding: 13px;
   background-color: var(--lavender);
-  color: var(--btn-fg);
+  color: var(--crust);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.925rem;
   font-weight: 500;

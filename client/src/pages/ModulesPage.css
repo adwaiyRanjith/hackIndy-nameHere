@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 28px;
-  background-color: var(--btn-fg);
+  background-color: var(--crust);
   border-bottom: 1px solid var(--surface0);
 }
 
@@ -20,14 +20,14 @@
 }
 
 .logo-icon {
-  background-color: rgba(114, 135, 253, 0.12);
+  background-color: rgba(186, 187, 241, 0.12);
   color: var(--lavender);
   font-size: 16px;
   font-weight: 500;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid rgba(114, 135, 253, 0.2);
+  border: 1px solid rgba(186, 187, 241, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,8 +86,8 @@
 }
 
 .progress-pill {
-  background-color: rgba(114, 135, 253, 0.1);
-  border: 1px solid rgba(114, 135, 253, 0.2);
+  background-color: rgba(186, 187, 241, 0.1);
+  border: 1px solid rgba(186, 187, 241, 0.2);
   color: var(--lavender);
   font-size: 0.8rem;
   font-weight: 500;
@@ -116,7 +116,7 @@
 }
 
 .module-card.module-complete {
-  border-color: rgba(64, 160, 43, 0.25);
+  border-color: rgba(166, 209, 137, 0.25);
 }
 
 .module-icon {
@@ -160,18 +160,18 @@
 }
 
 .status-done {
-  background-color: rgba(64, 160, 43, 0.12);
+  background-color: rgba(166, 209, 137, 0.12);
   color: var(--green);
 }
 
 .status-pending {
-  background-color: rgba(172, 176, 190, 0.3);
+  background-color: rgba(98, 104, 128, 0.3);
   color: var(--overlay0);
 }
 
 .audit-btn {
   background-color: var(--lavender);
-  color: var(--btn-fg);
+  color: var(--crust);
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
@@ -194,7 +194,7 @@
   width: 100%;
   padding: 13px;
   background-color: var(--lavender);
-  color: var(--btn-fg);
+  color: var(--crust);
   font-family: 'DM Sans', sans-serif;
   font-size: 0.925rem;
   font-weight: 500;
