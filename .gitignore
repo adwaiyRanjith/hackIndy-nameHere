@@ -1,0 +1,31 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Large model files
+checkpoints/
+*.pth
+*.bin
+*.safetensors
+
+# Depth-Anything-V2 repo (install from source per README)
+Depth-Anything-V2/
+
+# Runtime data
+uploads/
+frames/
+reports/
+db_data/
+logs/
+
+# Node
+node_modules/
+.next/
+out/
+
+# Misc
+.DS_Store
+*.log

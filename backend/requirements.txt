@@ -1,0 +1,17 @@
+fastapi>=0.111.0
+python-dotenv>=1.0.0
+uvicorn[standard]>=0.29.0
+motor>=3.4.0
+pymongo>=4.7.0
+python-multipart>=0.0.9
+pydantic>=2.7.0
+openai>=1.30.0
+google-genai>=1.0.0
+opencv-python-headless>=4.9.0
+numpy>=1.26.0
+reportlab>=4.2.0
+torch>=2.3.0
+torchvision>=0.18.0
+# DepthAnything V2 — install from source:
+# git clone https://github.com/DepthAnything/Depth-Anything-V2
+# pip install -e ./Depth-Anything-V2
