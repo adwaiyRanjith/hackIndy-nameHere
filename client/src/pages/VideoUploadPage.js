@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './VideoUploadPage.css';
-import { createModule, uploadVideo, getModuleStatus, getModuleResults, mapViolation } from '../api';
 
 const MODULE_INFO = {
   entrance: {
@@ -193,137 +192,34 @@ const MOCK_FINDINGS = {
 };
 
 function VideoUploadPage() {
-  const { moduleId: moduleType } = useParams(); // e.g. "entrance"
+  const { moduleId } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef();
-  const pollRef = useRef(null);
 
-  const info = MODULE_INFO[moduleType] || {
+  const info = MODULE_INFO[moduleId] || {
     label: 'Unknown Module',
     icon: '📹',
     instructions: [],
   };
 
-  const [phase, setPhase] = useState('upload'); // upload | recording | analyzing | results
+  const [phase, setPhase] = useState('upload'); // upload | analyzing | results
   const [fileName, setFileName] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [progressLabel, setProgressLabel] = useState('');
-  const [findings, setFindings] = useState([]);
-  const [backendModuleId, setBackendModuleId] = useState(null);
-  const [error, setError] = useState(null);
-
-  // Recording state
-  const videoPreviewRef = useRef();
-  const mediaRecorderRef = useRef(null);
-  const recordedChunksRef = useRef([]);
-  const streamRef = useRef(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordedBlob, setRecordedBlob] = useState(null);
-
-  // On mount: register this module in the backend if not already done
-  useEffect(() => {
-    const auditId = localStorage.getItem('auditId');
-    if (!auditId) return;
-
-    const stored = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
-    if (stored[moduleType]) {
-      setBackendModuleId(stored[moduleType]);
-    } else {
-      createModule(auditId, moduleType)
-        .then(({ module_id }) => {
-          const updated = { ...stored, [moduleType]: module_id };
-          localStorage.setItem('auditModuleIds', JSON.stringify(updated));
-          setBackendModuleId(module_id);
-        })
-        .catch((err) => console.error('Failed to create module:', err));
-    }
-
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [moduleType]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setFileName(file.name);
-    const auditId = localStorage.getItem('auditId');
-    if (auditId && backendModuleId) {
-      startRealAnalysis(auditId, backendModuleId, file);
-    } else {
-      startDemoAnalysis();
-    }
+    startAnalysis();
   };
 
-  const startRealAnalysis = async (auditId, bModuleId, file) => {
-    setPhase('analyzing');
-    setProgress(5);
-    setProgressLabel('Uploading video...');
-    setError(null);
-
-    try {
-      await uploadVideo(auditId, bModuleId, file);
-      setProgress(15);
-
-      pollRef.current = setInterval(async () => {
-        try {
-          const status = await getModuleStatus(auditId, bModuleId);
-          setProgress(status.progress || 0);
-
-          const labels = {
-            extracting_frames: 'Extracting frames and removing duplicates...',
-            analyzing: 'Running AI analysis...',
-            checking_compliance: 'Checking against ADA guidelines...',
-            complete: 'Done!',
-            error: 'Analysis encountered an error.',
-          };
-          setProgressLabel(labels[status.status] || 'Processing...');
-
-          if (status.status === 'complete') {
-            clearInterval(pollRef.current);
-            const results = await getModuleResults(auditId, bModuleId);
-            const mapped = (results.violations || []).map(mapViolation);
-            setFindings(mapped);
-
-            const existing = JSON.parse(localStorage.getItem('auditModules') || '{}');
-            existing[moduleType] = { status: 'complete', findings: mapped };
-            localStorage.setItem('auditModules', JSON.stringify(existing));
-
-            setProgress(100);
-            setPhase('results');
-          } else if (status.status === 'error') {
-            clearInterval(pollRef.current);
-            setError(status.error_message || 'Analysis failed. Try again.');
-            setPhase('upload');
-          }
-        } catch (err) {
-          console.error('Polling error:', err);
-        }
-      }, 2000);
-    } catch (err) {
-      console.error('Upload failed:', err);
-      setError('Failed to upload video. Please try again.');
-      setPhase('upload');
-    }
-  };
-
-  // Demo mode: simulates progress with mock findings
-  const startDemoAnalysis = () => {
-    const mockFindings = MOCK_FINDINGS[moduleType] || [];
+  const startAnalysis = () => {
     setPhase('analyzing');
     setProgress(0);
-    setProgressLabel('Extracting frames and removing duplicates...');
     const interval = setInterval(() => {
       setProgress((p) => {
-        if (p >= 30 && p < 60) setProgressLabel('Running depth estimation model...');
-        if (p >= 60 && p < 85) setProgressLabel('Measuring key dimensions...');
-        if (p >= 85) setProgressLabel('Checking against ADA guidelines...');
         if (p >= 100) {
           clearInterval(interval);
-          setFindings(mockFindings);
-          const existing = JSON.parse(localStorage.getItem('auditModules') || '{}');
-          existing[moduleType] = { status: 'complete', findings: mockFindings };
-          localStorage.setItem('auditModules', JSON.stringify(existing));
           setPhase('results');
           return 100;
         }
@@ -332,75 +228,17 @@ function VideoUploadPage() {
     }, 120);
   };
 
-  const startRecording = async () => {
-    setError(null);
-    setRecordedBlob(null);
-    recordedChunksRef.current = [];
-    setRecordedBlob(null);
-    recordedChunksRef.current = [];
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      streamRef.current = stream;
-      videoPreviewRef.current.srcObject = stream;
-      videoPreviewRef.current.play();
-
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) recordedChunksRef.current.push(e.data);
-      };
-      recorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-        setRecordedBlob(blob);
-        stream.getTracks().forEach((t) => t.stop());
-        videoPreviewRef.current.srcObject = null;
-        videoPreviewRef.current.src = URL.createObjectURL(blob);
-        videoPreviewRef.current.controls = true;
-        videoPreviewRef.current.play();
-      };
-      recorder.start();
-      setIsRecording(true);
-      setPhase('recording');
-    } catch (err) {
-      console.error('Camera error:', err.name, err.message);
-      if (err.name === 'NotAllowedError') {
-        setError('Camera access denied. In your browser address bar, click the camera icon and allow access, then try again.');
-      } else if (err.name === 'NotFoundError') {
-        setError('No camera found on this device.');
-      } else {
-        setError(`Camera error: ${err.message}`);
-      }
-    }
-  };
-
-  const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    setIsRecording(false);
-  };
-
-  const submitRecording = () => {
-    if (!recordedBlob) return;
-    const file = new File([recordedBlob], 'recording.webm', { type: 'video/webm' });
-    setFileName('recording.webm');
-    const auditId = localStorage.getItem('auditId');
-    if (auditId && backendModuleId) {
-      startRealAnalysis(auditId, backendModuleId, file);
-    } else {
-      startDemoAnalysis();
-    }
-  };
-
-  const cancelRecording = () => {
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    setIsRecording(false);
-    setRecordedBlob(null);
-    setPhase('upload');
-  };
-
   const handleConfirm = () => {
+    const existing = JSON.parse(localStorage.getItem('auditModules') || '{}');
+    existing[moduleId] = {
+      status: 'complete',
+      findings: MOCK_FINDINGS[moduleId] || [],
+    };
+    localStorage.setItem('auditModules', JSON.stringify(existing));
     navigate('/modules');
   };
 
+  const findings = MOCK_FINDINGS[moduleId] || [];
   const violations = findings.filter((f) => f.severity === 'violation');
   const warnings = findings.filter((f) => f.severity === 'warning');
 
@@ -451,58 +289,23 @@ function VideoUploadPage() {
               <span className="divider-line" />
             </div>
 
-            <button className="record-btn" onClick={startRecording}>
-              &#9679; Record Video
+            <button className="record-btn" onClick={startAnalysis}>
+              &#9679; Use Demo Analysis
             </button>
-            <p className="record-hint">Use your device camera to record directly.</p>
-            {error && <p className="record-hint" style={{ color: '#ff453a' }}>{error}</p>}
-
-            <div className="divider-row" style={{ marginTop: '12px' }}>
-              <span className="divider-line" />
-              <span className="divider-text">or</span>
-              <span className="divider-line" />
-            </div>
-            <button
-              className="record-btn"
-              style={{ background: 'transparent', color: '#8e8e93', border: '1px solid #3a3a3c', marginTop: '8px' }}
-              onClick={startDemoAnalysis}
-            >
-              Use Demo Analysis
-            </button>
+            <p className="record-hint">No video? Run a demo analysis to see how the report looks.</p>
           </>
-        )}
-
-        {phase === 'recording' && (
-          <div className="analyzing-section">
-            <video
-              ref={videoPreviewRef}
-              style={{ width: '100%', maxWidth: '480px', borderRadius: '12px', marginBottom: '16px', background: '#000' }}
-              muted={isRecording}
-              playsInline
-            />
-            {isRecording ? (
-              <>
-                <p className="analyzing-sub" style={{ color: '#ff453a' }}>&#9679; Recording...</p>
-                <button className="confirm-btn" onClick={stopRecording}>&#9646;&#9646; Stop Recording</button>
-              </>
-            ) : (
-              <>
-                <p className="analyzing-sub">Review your recording, then submit or re-record.</p>
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                  <button className="confirm-btn" onClick={submitRecording}>Submit for Analysis</button>
-                  <button className="back-btn" style={{ marginTop: 0 }} onClick={startRecording}>Re-record</button>
-                  <button className="back-btn" style={{ marginTop: 0 }} onClick={cancelRecording}>Cancel</button>
-                </div>
-              </>
-            )}
-          </div>
         )}
 
         {phase === 'analyzing' && (
           <div className="analyzing-section">
             <div className="analyzing-spinner" />
             <h2 className="analyzing-title">Analyzing Video...</h2>
-            <p className="analyzing-sub">{progressLabel}</p>
+            <p className="analyzing-sub">
+              {progress < 30 && 'Extracting frames and removing duplicates...'}
+              {progress >= 30 && progress < 60 && 'Running depth estimation model...'}
+              {progress >= 60 && progress < 85 && 'Measuring key dimensions...'}
+              {progress >= 85 && 'Checking against ADA guidelines...'}
+            </p>
             <div className="progress-bar-track">
               <div
                 className="progress-bar-fill"

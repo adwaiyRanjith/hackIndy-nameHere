@@ -1,25 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SurveyPage.css';
-import { createAudit, saveQuestionnaire } from '../api';
-
-const FACILITY_TYPE_MAP = {
-  'Office Building': 'office',
-  'Retail Store': 'retail',
-  'Restaurant / Food Service': 'restaurant',
-  'Medical / Healthcare Facility': 'medical',
-  'School / Educational Facility': 'other',
-  'Hotel / Lodging': 'hotel',
-  'Warehouse / Industrial': 'other',
-  'Other': 'other',
-};
-
-function getBuildingAge(yearBuilt) {
-  const y = parseInt(yearBuilt);
-  if (y < 1992) return 'pre-1992';
-  if (y <= 2012) return '1992-2012';
-  return 'post-2012';
-}
 
 const BUILDING_TYPES = [
   'Office Building',
@@ -52,7 +33,6 @@ const STEPS = [
 function SurveyPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     businessName: '',
     city: '',
@@ -77,32 +57,12 @@ function SurveyPage() {
   const canProceedStep2 =
     form.hasParking && form.hasElevator && form.hasRamps;
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (step < STEPS.length - 1) {
       setStep(step + 1);
     } else {
-      setLoading(true);
       localStorage.setItem('surveyAnswers', JSON.stringify(form));
-      localStorage.removeItem('auditModules');
-      localStorage.removeItem('auditModuleIds');
-      try {
-        const { audit_id } = await createAudit();
-        await saveQuestionnaire(audit_id, {
-          state: form.state,
-          facility_type: FACILITY_TYPE_MAP[form.buildingType] || 'other',
-          building_age: getBuildingAge(form.yearBuilt),
-          recent_renovation: form.lastRenovation
-            ? (new Date().getFullYear() - parseInt(form.lastRenovation)) <= 10
-            : false,
-          parking_spaces: form.hasParking === 'Yes' ? 1 : 0,
-        });
-        localStorage.setItem('auditId', audit_id);
-      } catch (err) {
-        console.error('Failed to create audit:', err);
-      } finally {
-        setLoading(false);
-        navigate('/modules');
-      }
+      navigate('/modules');
     }
   };
 
@@ -249,7 +209,6 @@ function SurveyPage() {
           className="survey-next-btn"
           onClick={handleNext}
           disabled={
-            loading ||
             (step === 0 && !canProceedStep0) ||
             (step === 1 && !canProceedStep1) ||
             (step === 2 && !canProceedStep2)
