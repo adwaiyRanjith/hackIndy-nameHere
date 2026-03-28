@@ -18,6 +18,8 @@ const FACILITY_TYPES = [
   { value: "office", label: "Office Building" },
   { value: "medical", label: "Medical / Healthcare" },
   { value: "hotel", label: "Hotel / Lodging" },
+  { value: "education", label: "School / University" },
+  { value: "assembly", label: "Venue / Entertainment" },
   { value: "other", label: "Other" },
 ];
 

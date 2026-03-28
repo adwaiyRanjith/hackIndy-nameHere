@@ -137,6 +137,7 @@ async def get_module_status(audit_id: str, module_id: str, request: Request):
     return ModuleStatusResponse(
         status=module.get("status", "unknown"),
         progress=module.get("progress", 0),
+        module_type=module.get("module_type"),
         violations_found=violations_found,
         error_message=module.get("error_message"),
     )

@@ -14,18 +14,10 @@ checkpoints/
 # Depth-Anything-V2 repo (install from source per README)
 Depth-Anything-V2/
 
-# Runtime data
+# Node
+node_modules/
+
+# Generated files
 uploads/
 frames/
 reports/
-db_data/
-logs/
-
-# Node
-node_modules/
-.next/
-out/
-
-# Misc
-.DS_Store
-*.log

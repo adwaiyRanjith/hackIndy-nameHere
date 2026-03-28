@@ -18,7 +18,6 @@ pip install -r requirements.txt
 # Install FFmpeg (required for video processing)
 # Ubuntu: sudo apt install ffmpeg
 # macOS:  brew install ffmpeg
-module load ffmpeg
 
 # Install DepthAnything V2 (optional — falls back to placeholder if unavailable)
 git clone https://github.com/DepthAnything/Depth-Anything-V2
@@ -26,8 +25,8 @@ pip install -e ./Depth-Anything-V2
 # Download ViT-S checkpoint:
 # https://huggingface.co/depth-anything/Depth-Anything-V2-Small/resolve/main/depth_anything_v2_vits.pth
 # Place at: backend/checkpoints/depth_anything_v2_vits.pth
-mkdir -p backend/checkpoints
-wget -O backend/checkpoints/depth_anything_v2_vits.pth \
+mkdir -p checkpoints
+curl -L -o checkpoints/depth_anything_v2_vits.pth \
   https://huggingface.co/depth-anything/Depth-Anything-V2-Small/resolve/main/depth_anything_v2_vits.pth
 
 # Set environment variables
@@ -42,6 +41,7 @@ uvicorn main:app --reload --port 8000
 
 ```bash
 cd frontend
+brew install node
 npm install
 npm run dev   # Runs on http://localhost:3000
 ```

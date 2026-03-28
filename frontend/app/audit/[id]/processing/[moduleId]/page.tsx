@@ -22,6 +22,7 @@ export default function ProcessingPage() {
 
   const [status, setStatus] = useState("extracting_frames");
   const [progress, setProgress] = useState(0);
+  const [moduleType, setModuleType] = useState<string | null>(null);
   const [violationsFound, setViolationsFound] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export default function ProcessingPage() {
         if (cancelled) return;
         setStatus(data.status);
         setProgress(data.progress ?? 0);
+        setModuleType(data.module_type ?? null);
         setViolationsFound(data.violations_found ?? null);
         setErrorMessage(data.error_message ?? null);
 
@@ -125,7 +127,7 @@ export default function ProcessingPage() {
             {errorMessage ?? "An unexpected error occurred."}
           </div>
           <button
-            onClick={() => router.push(`/audit/${id}/capture/${moduleId}`)}
+            onClick={() => router.push(`/audit/${id}/capture/${moduleType ?? moduleId}`)}
             className="w-full rounded-xl bg-blue-700 text-white py-3 font-bold hover:bg-blue-800 transition-colors"
           >
             Try Again

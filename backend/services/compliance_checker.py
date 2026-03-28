@@ -203,17 +203,33 @@ def check_module_compliance(
     return violations
 
 
+_UNIVERSAL_MODULES = [
+    "entrance", "hallway", "restroom", "elevator", "stairway", "signage", "drinking_fountain",
+]
+
+_FACILITY_MODULE_MAP: Dict[str, List[str]] = {
+    "restaurant": _UNIVERSAL_MODULES + ["parking", "dining", "counter", "outdoor_seating"],
+    "retail":     _UNIVERSAL_MODULES + ["parking", "sales_floor", "checkout", "fitting_room", "counter"],
+    "office":     _UNIVERSAL_MODULES + ["parking", "reception", "conference_room", "break_room"],
+    "medical":    _UNIVERSAL_MODULES + ["parking", "waiting_room", "exam_room", "patient_room", "pharmacy", "reception"],
+    "hotel":      _UNIVERSAL_MODULES + ["parking", "lobby", "guest_room", "pool", "fitness_center", "dining", "counter"],
+    "education":  _UNIVERSAL_MODULES + ["parking", "classroom", "cafeteria", "gymnasium", "auditorium", "library"],
+    "assembly":   _UNIVERSAL_MODULES + ["parking", "assembly_seating", "stage", "concession", "ticket_booth"],
+    "other":      _UNIVERSAL_MODULES + ["parking"],
+}
+
+
 def get_applicable_rules_for_questionnaire(questionnaire: dict) -> List[str]:
     """
     Determine which rule IDs apply based on questionnaire answers.
     """
     rule_map = _RULE_DATA.get("module_rule_map", {})
+    facility_type = questionnaire.get("facility_type", "other")
+    applicable_modules = get_applicable_modules(questionnaire)
     applicable = []
 
-    for module_type, rule_ids in rule_map.items():
-        # Skip parking if no parking lot
-        if module_type == "parking" and questionnaire.get("parking_spaces", 0) == 0:
-            continue
+    for module_type in applicable_modules:
+        rule_ids = rule_map.get(module_type, [])
         applicable.extend(rule_ids)
 
     return applicable
@@ -221,12 +237,10 @@ def get_applicable_rules_for_questionnaire(questionnaire: dict) -> List[str]:
 
 def get_applicable_modules(questionnaire: dict) -> List[str]:
     """Return list of modules that should be audited for this facility."""
-    rule_map = _RULE_DATA.get("module_rule_map", {})
-    modules = []
+    facility_type = questionnaire.get("facility_type", "other")
+    modules = list(_FACILITY_MODULE_MAP.get(facility_type, _FACILITY_MODULE_MAP["other"]))
 
-    for module_type in rule_map:
-        if module_type == "parking" and questionnaire.get("parking_spaces", 0) == 0:
-            continue
-        modules.append(module_type)
+    if questionnaire.get("parking_spaces", 0) == 0 and "parking" in modules:
+        modules.remove("parking")
 
     return modules

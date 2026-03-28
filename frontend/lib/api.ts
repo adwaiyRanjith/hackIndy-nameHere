@@ -77,6 +77,7 @@ export function getModuleStatus(
 ): Promise<{
   status: string;
   progress: number;
+  module_type: string | null;
   violations_found: number | null;
   error_message: string | null;
 }> {

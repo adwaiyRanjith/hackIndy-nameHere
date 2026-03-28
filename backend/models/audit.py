@@ -106,6 +106,7 @@ class CreateModuleResponse(BaseModel):
 class ModuleStatusResponse(BaseModel):
     status: str
     progress: int
+    module_type: Optional[str] = None
     violations_found: Optional[int] = None
     error_message: Optional[str] = None
 

@@ -26,7 +26,9 @@
       "remediation_cost_low": 75,
       "remediation_cost_high": 200,
       "gemini_field": "handle_type",
-      "prohibited_values": ["round_knob"]
+      "prohibited_values": [
+        "round_knob"
+      ]
     },
     {
       "rule_id": "entrance_threshold",
@@ -93,7 +95,9 @@
       "remediation_cost_low": 100,
       "remediation_cost_high": 300,
       "gemini_field": "faucet_type",
-      "prohibited_values": ["knob"]
+      "prohibited_values": [
+        "knob"
+      ]
     },
     {
       "rule_id": "restroom_door_swing",
@@ -106,7 +110,9 @@
       "remediation_cost_low": 300,
       "remediation_cost_high": 800,
       "gemini_field": "door_swings",
-      "prohibited_values": ["inward"]
+      "prohibited_values": [
+        "inward"
+      ]
     },
     {
       "rule_id": "restroom_clearance",
@@ -204,29 +210,112 @@
       "flag_if_false": true
     }
   ],
-
   "parking_count_table": [
-    { "total_min": 1,   "total_max": 25,  "required": 1 },
-    { "total_min": 26,  "total_max": 50,  "required": 2 },
-    { "total_min": 51,  "total_max": 75,  "required": 3 },
-    { "total_min": 76,  "total_max": 100, "required": 4 },
-    { "total_min": 101, "total_max": 150, "required": 5 },
-    { "total_min": 151, "total_max": 200, "required": 6 },
-    { "total_min": 201, "total_max": 300, "required": 7 },
-    { "total_min": 301, "total_max": 400, "required": 8 },
-    { "total_min": 401, "total_max": 500, "required": 9 },
-    { "total_min": 501, "total_max": null, "required_pct": 0.02 }
+    {
+      "total_min": 1,
+      "total_max": 25,
+      "required": 1
+    },
+    {
+      "total_min": 26,
+      "total_max": 50,
+      "required": 2
+    },
+    {
+      "total_min": 51,
+      "total_max": 75,
+      "required": 3
+    },
+    {
+      "total_min": 76,
+      "total_max": 100,
+      "required": 4
+    },
+    {
+      "total_min": 101,
+      "total_max": 150,
+      "required": 5
+    },
+    {
+      "total_min": 151,
+      "total_max": 200,
+      "required": 6
+    },
+    {
+      "total_min": 201,
+      "total_max": 300,
+      "required": 7
+    },
+    {
+      "total_min": 301,
+      "total_max": 400,
+      "required": 8
+    },
+    {
+      "total_min": 401,
+      "total_max": 500,
+      "required": 9
+    },
+    {
+      "total_min": 501,
+      "total_max": null,
+      "required_pct": 0.02
+    }
   ],
-
   "module_rule_map": {
-    "entrance": ["entrance_door_width", "entrance_door_hardware", "entrance_threshold", "entrance_signage_isa", "entrance_ramp_handrails"],
-    "restroom": ["restroom_grab_bars", "restroom_faucet_type", "restroom_door_swing", "restroom_clearance", "restroom_mirror_height"],
-    "parking":  ["parking_space_count", "parking_signage", "parking_van_accessible", "parking_access_aisle", "parking_curb_ramp"],
-    "hallway":  [],
-    "dining":   [],
-    "counter":  []
+    "entrance": [
+      "entrance_door_width",
+      "entrance_door_hardware",
+      "entrance_threshold",
+      "entrance_signage_isa",
+      "entrance_ramp_handrails"
+    ],
+    "restroom": [
+      "restroom_grab_bars",
+      "restroom_faucet_type",
+      "restroom_door_swing",
+      "restroom_clearance",
+      "restroom_mirror_height"
+    ],
+    "parking": [
+      "parking_space_count",
+      "parking_signage",
+      "parking_van_accessible",
+      "parking_access_aisle",
+      "parking_curb_ramp"
+    ],
+    "hallway": [],
+    "dining": [],
+    "counter": [],
+    "elevator": [],
+    "stairway": [],
+    "signage": [],
+    "drinking_fountain": [],
+    "outdoor_seating": [],
+    "cafeteria": [],
+    "concession": [],
+    "sales_floor": [],
+    "checkout": [],
+    "fitting_room": [],
+    "reception": [],
+    "conference_room": [],
+    "break_room": [],
+    "waiting_room": [],
+    "exam_room": [],
+    "patient_room": [],
+    "pharmacy": [],
+    "lobby": [],
+    "guest_room": [],
+    "pool": [],
+    "fitness_center": [],
+    "classroom": [],
+    "gymnasium": [],
+    "auditorium": [],
+    "library": [],
+    "assembly_seating": [],
+    "stage": [],
+    "ticket_booth": []
   },
-
   "state_overrides": {
     "CA": {
       "entrance_door_width": {

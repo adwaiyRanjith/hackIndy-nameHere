@@ -53,6 +53,7 @@ async def save_questionnaire(
             "$set": {
                 "facility": questionnaire,
                 "applicable_rules": applicable_rules,
+                "applicable_modules": applicable_modules,
                 "updated_at": datetime.utcnow().isoformat(),
             }
         },
