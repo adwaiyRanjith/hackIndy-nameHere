@@ -34,7 +34,7 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # Run
-uvicorn main:app --reload --port 8000
+uvicorn main:app --port 8000
 ```
 
 ### Frontend

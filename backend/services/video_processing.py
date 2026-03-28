@@ -18,7 +18,6 @@ import cv2
 import numpy as np
 
 from config import (
-    BLUR_THRESHOLD,
     SSIM_DUPLICATE_THRESHOLD,
     MIN_FRAMES,
     MAX_FRAMES,
@@ -31,10 +30,6 @@ logger = logging.getLogger(__name__)
 
 class VideoProcessingError(Exception):
     pass
-
-
-def _laplacian_variance(img_gray: np.ndarray) -> float:
-    return cv2.Laplacian(img_gray, cv2.CV_64F).var()
 
 
 def _ssim(a: np.ndarray, b: np.ndarray) -> float:
@@ -114,20 +109,16 @@ async def extract_key_frames(video_path: str, audit_id: str, module_id: str) -> 
         if img is not None:
             frames.append((p, img))
 
-    # Step 2: Drop blurry frames
+    # Step 2: Convert frames to include grayscale for deduplication
     sharp_frames = []
     for path, img in frames:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        variance = _laplacian_variance(gray)
-        if variance >= BLUR_THRESHOLD:
-            sharp_frames.append((path, img, gray))
-        else:
-            logger.debug(f"Discarding blurry frame {path.name} (variance={variance:.1f})")
+        sharp_frames.append((path, img, gray))
 
     if len(sharp_frames) < MIN_FRAMES:
         raise VideoProcessingError(
-            f"Only {len(sharp_frames)} sharp frames after blur filtering (need {MIN_FRAMES}). "
-            "Please re-record with better lighting and a steady hand."
+            f"Only {len(sharp_frames)} frames extracted (need {MIN_FRAMES}). "
+            "Video may be too short."
         )
 
     # Step 3: Drop near-duplicate consecutive frames (SSIM > threshold)
