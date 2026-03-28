@@ -14,13 +14,13 @@ function AuditChoicePage() {
       </div>
 
       <div className="choice-cards">
-        <button className="choice-card" onClick={() => navigate('/new-audit')}>
+        <button className="choice-card" onClick={() => navigate('/survey')}>
           <div className="choice-icon new">&#43;</div>
           <h2 className="choice-card-title">New Audit</h2>
           <p className="choice-card-desc">Start a fresh audit session</p>
         </button>
 
-        <button className="choice-card" onClick={() => navigate('/past-audits')}>
+        <button className="choice-card" onClick={() => navigate('/dashboard')}>
           <div className="choice-icon past">&#128196;</div>
           <h2 className="choice-card-title">Past Audits</h2>
           <p className="choice-card-desc">View and review previous audits</p>

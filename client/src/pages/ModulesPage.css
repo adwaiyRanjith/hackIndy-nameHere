@@ -1,0 +1,212 @@
+* {
+  box-sizing: border-box;
+}
+
+.modules-container {
+  min-height: 100vh;
+  background-color: #2b2b2b;
+  color: #f0f0f0;
+}
+
+.modules-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  background-color: #222222;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.modules-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  background-color: #c85a00;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.back-link {
+  background: none;
+  border: none;
+  color: #9a9a9a;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #f0f0f0;
+}
+
+.modules-content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.modules-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 16px;
+}
+
+.modules-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #f0f0f0;
+}
+
+.modules-sub {
+  font-size: 0.9rem;
+  color: #9a9a9a;
+  margin: 0;
+}
+
+.progress-pill {
+  background-color: #3a3a3a;
+  color: #c85a00;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.module-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.module-card {
+  background-color: #333333;
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1.5px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.module-card.module-complete {
+  border-color: rgba(52, 199, 89, 0.3);
+}
+
+.module-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  width: 44px;
+  text-align: center;
+}
+
+.module-info {
+  flex: 1;
+}
+
+.module-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 3px;
+}
+
+.module-desc {
+  font-size: 0.8rem;
+  color: #777777;
+}
+
+.module-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.status-done {
+  background-color: rgba(52, 199, 89, 0.15);
+  color: #34c759;
+}
+
+.status-pending {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #666666;
+}
+
+.audit-btn {
+  background-color: #c85a00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.audit-btn:hover {
+  background-color: #a84900;
+}
+
+.finalize-section {
+  text-align: center;
+}
+
+.finalize-btn {
+  width: 100%;
+  padding: 16px;
+  background-color: #c85a00;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.finalize-btn:hover:not(:disabled) {
+  background-color: #a84900;
+}
+
+.finalize-btn:disabled {
+  background-color: #3a3a3a;
+  color: #555555;
+  cursor: not-allowed;
+}
+
+.finalize-hint {
+  font-size: 0.8rem;
+  color: #666666;
+  margin: 10px 0 0 0;
+}
