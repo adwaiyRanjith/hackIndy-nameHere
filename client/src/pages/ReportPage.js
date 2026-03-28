@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import './ReportPage.css';
+import { triggerReport, getReport } from '../api';
 
 const MODULE_LABELS = {
   entrance: 'Entrance & Doorways',
@@ -32,8 +34,33 @@ function parseCostRange(str) {
 
 function ReportPage() {
   const navigate = useNavigate();
+  const [pdfUrl, setPdfUrl] = useState(null);
   const survey = JSON.parse(localStorage.getItem('surveyAnswers') || '{}');
   const auditModules = JSON.parse(localStorage.getItem('auditModules') || '{}');
+
+  useEffect(() => {
+    const auditId = localStorage.getItem('auditId');
+    if (!auditId) return;
+
+    triggerReport(auditId)
+      .then(() => {
+        // Poll until PDF is ready
+        const interval = setInterval(async () => {
+          try {
+            const report = await getReport(auditId);
+            if (report.pdf_url) {
+              setPdfUrl(`http://localhost:8000${report.pdf_url}`);
+              clearInterval(interval);
+            }
+          } catch {
+            // report not ready yet, keep polling
+          }
+        }, 3000);
+        // Stop polling after 2 minutes
+        setTimeout(() => clearInterval(interval), 120000);
+      })
+      .catch((err) => console.error('Failed to trigger report:', err));
+  }, []);
   const userName = localStorage.getItem('userName') || 'Auditor';
 
   const completedModules = Object.entries(auditModules).filter(
@@ -195,6 +222,17 @@ function ReportPage() {
           >
             &#128438; Save / Print Report
           </button>
+          {pdfUrl && (
+            <a
+              className="action-btn btn-primary"
+              href={pdfUrl}
+              target="_blank"
+              rel="noreferrer"
+              download
+            >
+              &#128196; Download PDF Report
+            </a>
+          )}
         </div>
 
         <p className="report-disclaimer">

@@ -17,6 +17,13 @@ Depth-Anything-V2/
 # Node
 node_modules/
 
+# Next.js build output
+frontend/.next/
+frontend/out/
+
+# React build output
+client/build/
+
 # Generated files
 uploads/
 frames/

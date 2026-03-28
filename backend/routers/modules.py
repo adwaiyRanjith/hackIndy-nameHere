@@ -3,6 +3,7 @@ import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import cv2
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Request, UploadFile
@@ -332,7 +333,7 @@ def _generate_annotated_frames(
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _find_module(audit: dict, module_id: str) -> dict | None:
+def _find_module(audit: dict, module_id: str) -> Optional[dict]:
     for m in audit.get("modules", []):
         if m.get("module_id") == module_id:
             return m
