@@ -9,7 +9,8 @@ function StartPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-    navigate('/audit-choice', { state: { name } });
+    localStorage.setItem('userName', name.trim());
+    navigate('/audit-choice', { state: { name: name.trim() } });
   };
 
   return (
