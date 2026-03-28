@@ -1,10 +1,6 @@
-* {
-  box-sizing: border-box;
-}
-
 .choice-container {
   min-height: 100vh;
-  background-color: #2b2b2b;
+  background-color: var(--base);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -14,77 +10,85 @@
 
 .choice-header {
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 40px;
 }
 
 .choice-title {
-  color: #f0f0f0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--text);
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 300;
+  letter-spacing: 0.4px;
   margin: 0 0 8px 0;
 }
 
 .choice-subtitle {
-  color: #9a9a9a;
-  font-size: 1rem;
+  color: var(--overlay1);
+  font-size: 0.925rem;
+  font-weight: 400;
   margin: 0;
 }
 
 .choice-cards {
   display: flex;
-  gap: 24px;
+  gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .choice-card {
-  background-color: #333333;
-  border: 1.5px solid #444444;
-  border-radius: 16px;
-  padding: 40px 32px;
-  width: 220px;
+  background-color: var(--mantle);
+  border: 1px solid var(--surface0);
+  border-radius: 12px;
+  padding: 32px 28px;
+  width: 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   cursor: pointer;
   transition: border-color 0.2s, transform 0.15s;
   text-align: center;
 }
 
 .choice-card:hover {
-  border-color: #c85a00;
-  transform: translateY(-4px);
+  border-color: var(--lavender);
+  transform: translateY(-3px);
 }
 
 .choice-icon {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  color: white;
+  font-size: 24px;
 }
 
 .choice-icon.new {
-  background-color: #c85a00;
+  background-color: rgba(180, 190, 254, 0.12);
+  color: var(--lavender);
+  border: 1px solid rgba(180, 190, 254, 0.2);
 }
 
 .choice-icon.past {
-  background-color: #555555;
+  background-color: rgba(69, 71, 90, 0.5);
+  color: var(--subtext0);
+  border: 1px solid var(--surface0);
 }
 
 .choice-card-title {
-  color: #f0f0f0;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 400;
   margin: 0;
 }
 
 .choice-card-desc {
-  color: #9a9a9a;
-  font-size: 0.875rem;
+  color: var(--overlay1);
+  font-size: 0.8rem;
+  font-weight: 400;
   margin: 0;
 }
