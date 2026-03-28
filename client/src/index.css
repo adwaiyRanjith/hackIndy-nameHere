@@ -2,29 +2,32 @@
 
 :root {
   /* Background layers */
-  --base:    #1e1e2e;
-  --mantle:  #181825;
-  --crust:   #11111b;
+  --base:    #eff1f5;
+  --mantle:  #e6e9ef;
+  --crust:   #dce0e8;
 
   /* Surface */
-  --surface0: #313244;
-  --surface1: #45475a;
-  --surface2: #585b70;
+  --surface0: #ccd0da;
+  --surface1: #bcc0cc;
+  --surface2: #acb0be;
 
   /* Text */
-  --text:     #cdd6f4;
-  --subtext1: #bac2de;
-  --subtext0: #a6adc8;
-  --overlay1: #7f849c;
-  --overlay0: #6c7086;
+  --text:     #4c4f69;
+  --subtext1: #5c5f77;
+  --subtext0: #6c6f85;
+  --overlay1: #8c8fa1;
+  --overlay0: #9ca0b0;
 
   /* Accents */
-  --lavender: #b4befe;
-  --green:    #a6e3a1;
-  --peach:    #fab387;
-  --red:      #f38ba8;
-  --mauve:    #cba6f7;
-  --teal:     #94e2d5;
+  --lavender: #7287fd;
+  --green:    #40a02b;
+  --peach:    #fe640b;
+  --red:      #d20f39;
+  --mauve:    #8839ef;
+  --teal:     #179299;
+
+  /* Button foreground — white for contrast on Latte accents */
+  --btn-fg:   #ffffff;
 }
 
 * {
