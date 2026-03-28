@@ -1,14 +1,15 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './StartPage.css';
 
 function StartPage() {
   const [name, setName] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return;
-    // will navigate to audit flow once those pages are built
-    alert(`Welcome, ${name}!`);
+    navigate('/audit-choice', { state: { name } });
   };
 
   return (
