@@ -4,9 +4,9 @@ import './VideoUploadPage.css';
 import { createModule, uploadVideo, getModuleStatus, getModuleResults, mapViolation } from '../api';
 
 const MODULE_INFO = {
+  // Universal
   entrance: {
-    label: 'Entrance & Doorways',
-    icon: '🚪',
+    label: 'Entrance & Doorways', icon: '🚪',
     instructions: [
       'Start outside, capture the full entrance area',
       'Film the door width from both sides — aim to show the full swing',
@@ -15,9 +15,8 @@ const MODULE_INFO = {
       'Pan slowly — hold each angle for at least 2 seconds',
     ],
   },
-  corridors: {
-    label: 'Corridors & Hallways',
-    icon: '🏛️',
+  hallway: {
+    label: 'Corridors & Hallways', icon: '🏛️',
     instructions: [
       'Walk through the entire hallway at a slow, steady pace',
       'Capture both sides of the hallway to show full width',
@@ -26,9 +25,8 @@ const MODULE_INFO = {
       'Include T-intersections and turning areas',
     ],
   },
-  restrooms: {
-    label: 'Restrooms',
-    icon: '🚻',
+  restroom: {
+    label: 'Restrooms', icon: '🚻',
     instructions: [
       'Film the exterior signage and door',
       'Capture the accessible stall — show door width and space inside',
@@ -37,20 +35,8 @@ const MODULE_INFO = {
       'Capture the door handle and latch mechanism',
     ],
   },
-  stairs: {
-    label: 'Stairs & Ramps',
-    icon: '🪜',
-    instructions: [
-      'Film the full length of the staircase or ramp',
-      'Capture both handrails — show where they start and end',
-      'Film the nosings/edges of each step',
-      'Show the landing areas at the top and bottom',
-      'For ramps, film the slope from the side',
-    ],
-  },
   parking: {
-    label: 'Parking Lot',
-    icon: '🅿️',
+    label: 'Parking Lot', icon: '🅿️',
     instructions: [
       'Film all accessible parking spaces and their signage',
       'Capture the access aisle next to each space',
@@ -59,20 +45,8 @@ const MODULE_INFO = {
       'Capture any slopes or uneven surfaces in the path',
     ],
   },
-  counter: {
-    label: 'Service Counter',
-    icon: '🏪',
-    instructions: [
-      'Film the front-facing side of the counter',
-      'Capture the counter height — include a reference point if possible',
-      'Show any lower section of the counter (accessible portion)',
-      'Film knee clearance underneath (if applicable)',
-      'Capture the full length of the service area',
-    ],
-  },
   elevator: {
-    label: 'Elevator',
-    icon: '🛗',
+    label: 'Elevator', icon: '🛗',
     instructions: [
       'Film the exterior call buttons — show their height',
       'Capture the floor indicator and braille signage outside',
@@ -81,15 +55,273 @@ const MODULE_INFO = {
       'Show the floor of the elevator and the gap at the landing',
     ],
   },
+  stairway: {
+    label: 'Stairs & Handrails', icon: '🪜',
+    instructions: [
+      'Film the full length of the staircase',
+      'Capture both handrails — show where they start and end',
+      'Film the nosings/edges of each step',
+      'Show the landing areas at the top and bottom',
+      'Capture handrail extensions beyond the top and bottom steps',
+    ],
+  },
   signage: {
-    label: 'Signage',
-    icon: '🪧',
+    label: 'Signage & Wayfinding', icon: '🪧',
     instructions: [
       'Film all room identification signs',
       'Capture the mounting height of each sign',
       'Show braille and raised characters up close',
       'Film signs near corners or doors (placement relative to door)',
       'Include exit signs and emergency signage',
+    ],
+  },
+  drinking_fountain: {
+    label: 'Drinking Fountain', icon: '💧',
+    instructions: [
+      'Film the spout and control height from the floor',
+      'Capture knee clearance underneath (if present)',
+      'Show both hi and lo units if a hi-lo fountain is installed',
+      'Include a reference object for scale if possible',
+    ],
+  },
+  // Dining / Food Service
+  dining: {
+    label: 'Dining Area', icon: '🍽️',
+    instructions: [
+      'Pan through the entire dining area',
+      'Show table heights at eye level',
+      'Capture aisle widths between tables',
+      'Show accessible seating arrangements',
+    ],
+  },
+  counter: {
+    label: 'Service Counter', icon: '🏪',
+    instructions: [
+      'Film the front-facing side of the counter',
+      'Capture the counter height — include a reference point if possible',
+      'Show any lower section of the counter (accessible portion)',
+      'Film knee clearance underneath (if applicable)',
+    ],
+  },
+  outdoor_seating: {
+    label: 'Outdoor Seating', icon: '🌿',
+    instructions: [
+      'Show the route from the entrance to the outdoor area',
+      'Capture the surface texture (pavers, concrete, etc.)',
+      'Film table heights and accessible setups',
+      'Show any barriers or obstacles',
+    ],
+  },
+  cafeteria: {
+    label: 'Cafeteria / Dining Hall', icon: '🥗',
+    instructions: [
+      'Walk through the food service line showing counter height',
+      'Film tray slide height and reach distance',
+      'Show aisle widths between tables',
+      'Capture accessible seating arrangements',
+    ],
+  },
+  concession: {
+    label: 'Concession Stand', icon: '🍿',
+    instructions: [
+      'Film the full counter height from the floor',
+      'Capture any accessible lowered section',
+      'Show the approach space and queue setup',
+    ],
+  },
+  // Retail
+  sales_floor: {
+    label: 'Sales Floor & Aisles', icon: '🛍️',
+    instructions: [
+      'Walk the narrowest aisles first',
+      'Show full aisle width between merchandise displays',
+      'Capture any protruding objects or displays',
+      'Show the accessible route to all departments',
+    ],
+  },
+  checkout: {
+    label: 'Checkout Counter', icon: '🧾',
+    instructions: [
+      'Film the counter height from the floor',
+      'Capture any accessible lowered section',
+      'Show PIN pad placement and reach distance',
+      'Film queue aisle width',
+    ],
+  },
+  fitting_room: {
+    label: 'Fitting Room', icon: '👗',
+    instructions: [
+      'Show the door clear width',
+      'Capture interior turning space',
+      'Film bench height and side clearance',
+      'Show hook heights on the wall',
+    ],
+  },
+  // Office / Professional
+  reception: {
+    label: 'Reception Desk', icon: '🗂️',
+    instructions: [
+      'Film the full counter height',
+      'Capture any accessible lowered section',
+      'Show approach clearance',
+      'Film any barriers between visitor and staff',
+    ],
+  },
+  conference_room: {
+    label: 'Conference Room', icon: '💼',
+    instructions: [
+      'Show door width when fully open',
+      'Film table height and knee clearance',
+      'Capture turning space in the room',
+      'Show accessible path to all seats',
+    ],
+  },
+  break_room: {
+    label: 'Break Room / Kitchen', icon: '☕',
+    instructions: [
+      'Film sink and counter heights',
+      'Show knee clearance under the sink',
+      'Capture appliance reach distances',
+      'Show overall floor clearance',
+    ],
+  },
+  // Medical / Healthcare
+  waiting_room: {
+    label: 'Waiting Room', icon: '🪑',
+    instructions: [
+      'Show wheelchair-accessible seating spaces',
+      'Capture aisle widths between chairs',
+      'Film check-in counter height',
+      'Show route from entrance',
+    ],
+  },
+  exam_room: {
+    label: 'Examination Room', icon: '🩺',
+    instructions: [
+      'Film the exam table height from the floor',
+      'Show door width when open',
+      'Capture turning space near the table',
+      'Show any grab bars',
+    ],
+  },
+  patient_room: {
+    label: 'Patient Room', icon: '🛏️',
+    instructions: [
+      'Show clear floor space on each side of the bed',
+      'Film bathroom door width',
+      'Capture call button placement',
+      'Show route from door to bed',
+    ],
+  },
+  pharmacy: {
+    label: 'Pharmacy Counter', icon: '💊',
+    instructions: [
+      'Film the full counter height',
+      'Show the consultation area',
+      'Capture accessible reach distances',
+      'Film PIN pad placement',
+    ],
+  },
+  // Hotel / Lodging
+  lobby: {
+    label: 'Hotel Lobby', icon: '🏨',
+    instructions: [
+      'Walk from entrance to the check-in desk',
+      'Show check-in desk height and accessible section',
+      'Capture route to elevator and amenities',
+      'Film any floor surface transitions',
+    ],
+  },
+  guest_room: {
+    label: 'Accessible Guest Room', icon: '🛎️',
+    instructions: [
+      'Show clear floor space on each side of the bed',
+      'Film bathroom with grab bars',
+      'Capture roll-in shower or tub clearance',
+      'Show closet rod height and accessible controls',
+    ],
+  },
+  pool: {
+    label: 'Pool & Spa Area', icon: '🏊',
+    instructions: [
+      'Show pool lift or entry ramp',
+      'Capture deck surface (slip resistance)',
+      'Film route from changing area to pool',
+      'Show accessible locker and bench heights',
+    ],
+  },
+  fitness_center: {
+    label: 'Fitness Center', icon: '🏋️',
+    instructions: [
+      'Walk through showing aisle widths between equipment',
+      'Capture accessible machine examples',
+      'Show locker and bench heights',
+      'Film route from entrance',
+    ],
+  },
+  // Education
+  classroom: {
+    label: 'Classroom', icon: '📚',
+    instructions: [
+      'Show aisle width between desks',
+      'Film an accessible desk with knee clearance',
+      'Capture whiteboard/blackboard reach height',
+      'Show door width and turning space',
+    ],
+  },
+  gymnasium: {
+    label: 'Gymnasium', icon: '🏀',
+    instructions: [
+      'Show accessible spectator seating area',
+      'Film route from entrance to the gym floor',
+      'Capture locker room door widths',
+      'Show any fixed equipment clearances',
+    ],
+  },
+  auditorium: {
+    label: 'Auditorium', icon: '🎭',
+    instructions: [
+      'Show wheelchair seating spaces and companion seats',
+      'Capture route from entrance to accessible seating',
+      'Film stage access ramp or lift',
+      'Show sight lines from accessible seating',
+    ],
+  },
+  library: {
+    label: 'Library', icon: '📖',
+    instructions: [
+      'Walk aisles showing width between shelves',
+      'Film reach height of shelves',
+      'Show accessible study table knee clearance',
+      'Capture catalog terminal height',
+    ],
+  },
+  // Assembly / Entertainment
+  assembly_seating: {
+    label: 'Assembly Seating', icon: '🎪',
+    instructions: [
+      'Show wheelchair space dimensions',
+      'Capture companion seat placement',
+      'Film route from entrance to accessible seating',
+      'Show aisle widths',
+    ],
+  },
+  stage: {
+    label: 'Stage Access', icon: '🎤',
+    instructions: [
+      'Show ramp or lift for stage access',
+      'Film handrail height and extension',
+      'Capture approach clearance',
+      'Show the performer/presenter area',
+    ],
+  },
+  ticket_booth: {
+    label: 'Ticket / Box Office', icon: '🎟️',
+    instructions: [
+      'Film counter/window height from the floor',
+      'Capture any accessible lowered section',
+      'Show approach clearance',
+      'Film queue/line setup',
     ],
   },
 };
@@ -220,10 +452,17 @@ function VideoUploadPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState(null);
 
+  const pendingFileRef = useRef(null);
+  const createStartedRef = useRef(false);
+
   // On mount: register this module in the backend if not already done
   useEffect(() => {
     const auditId = localStorage.getItem('auditId');
     if (!auditId) return;
+
+    // Prevent React StrictMode double-invoke from creating two module entries
+    if (createStartedRef.current) return;
+    createStartedRef.current = true;
 
     const stored = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
     if (stored[moduleType]) {
@@ -231,8 +470,10 @@ function VideoUploadPage() {
     } else {
       createModule(auditId, moduleType)
         .then(({ module_id }) => {
-          const updated = { ...stored, [moduleType]: module_id };
-          localStorage.setItem('auditModuleIds', JSON.stringify(updated));
+          // Re-read localStorage to avoid overwriting a concurrent write
+          const latest = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
+          latest[moduleType] = module_id;
+          localStorage.setItem('auditModuleIds', JSON.stringify(latest));
           setBackendModuleId(module_id);
         })
         .catch((err) => console.error('Failed to create module:', err));
@@ -243,6 +484,16 @@ function VideoUploadPage() {
     };
   }, [moduleType]);
 
+  // If a file was selected before backendModuleId was ready, start analysis now
+  useEffect(() => {
+    if (backendModuleId && pendingFileRef.current) {
+      const auditId = localStorage.getItem('auditId');
+      const file = pendingFileRef.current;
+      pendingFileRef.current = null;
+      startRealAnalysis(auditId, backendModuleId, file);
+    }
+  }, [backendModuleId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -250,6 +501,12 @@ function VideoUploadPage() {
     const auditId = localStorage.getItem('auditId');
     if (auditId && backendModuleId) {
       startRealAnalysis(auditId, backendModuleId, file);
+    } else if (auditId) {
+      // backendModuleId not ready yet — queue the file
+      pendingFileRef.current = file;
+      setPhase('analyzing');
+      setProgress(5);
+      setProgressLabel('Preparing module...');
     } else {
       startDemoAnalysis();
     }
@@ -336,31 +593,29 @@ function VideoUploadPage() {
     setError(null);
     setRecordedBlob(null);
     recordedChunksRef.current = [];
-    setRecordedBlob(null);
-    recordedChunksRef.current = [];
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       streamRef.current = stream;
-      videoPreviewRef.current.srcObject = stream;
-      videoPreviewRef.current.play();
 
-      const recorder = new MediaRecorder(stream);
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : MediaRecorder.isTypeSupported('video/webm')
+        ? 'video/webm'
+        : '';
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = recorder;
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) recordedChunksRef.current.push(e.data);
       };
       recorder.onstop = () => {
-        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const blob = new Blob(recordedChunksRef.current, { type: mimeType || 'video/webm' });
         setRecordedBlob(blob);
         stream.getTracks().forEach((t) => t.stop());
-        videoPreviewRef.current.srcObject = null;
-        videoPreviewRef.current.src = URL.createObjectURL(blob);
-        videoPreviewRef.current.controls = true;
-        videoPreviewRef.current.play();
       };
       recorder.start();
       setIsRecording(true);
       setPhase('recording');
+      // videoPreviewRef is not mounted yet — srcObject is set in the useEffect below
     } catch (err) {
       console.error('Camera error:', err.name, err.message);
       if (err.name === 'NotAllowedError') {
@@ -372,6 +627,20 @@ function VideoUploadPage() {
       }
     }
   };
+
+  // Attach the live stream to the video element once the recording phase renders it
+  useEffect(() => {
+    if (phase === 'recording' && isRecording && videoPreviewRef.current && streamRef.current) {
+      videoPreviewRef.current.srcObject = streamRef.current;
+      videoPreviewRef.current.play().catch(() => {});
+    }
+    if (phase === 'recording' && !isRecording && recordedBlob && videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = null;
+      videoPreviewRef.current.src = URL.createObjectURL(recordedBlob);
+      videoPreviewRef.current.controls = true;
+      videoPreviewRef.current.play().catch(() => {});
+    }
+  }, [phase, isRecording, recordedBlob]);
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
@@ -385,12 +654,20 @@ function VideoUploadPage() {
     const auditId = localStorage.getItem('auditId');
     if (auditId && backendModuleId) {
       startRealAnalysis(auditId, backendModuleId, file);
+    } else if (auditId) {
+      pendingFileRef.current = file;
+      setPhase('analyzing');
+      setProgress(5);
+      setProgressLabel('Preparing module...');
     } else {
       startDemoAnalysis();
     }
   };
 
   const cancelRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
     streamRef.current?.getTracks().forEach((t) => t.stop());
     setIsRecording(false);
     setRecordedBlob(null);

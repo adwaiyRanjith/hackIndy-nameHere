@@ -4,25 +4,35 @@ import './ReportPage.css';
 import { triggerReport, getReport } from '../api';
 
 const MODULE_LABELS = {
-  entrance: 'Entrance & Doorways',
-  corridors: 'Corridors & Hallways',
-  restrooms: 'Restrooms',
-  stairs: 'Stairs & Ramps',
-  parking: 'Parking Lot',
-  counter: 'Service Counter',
-  elevator: 'Elevator',
-  signage: 'Signage',
+  entrance: 'Entrance & Doorways', hallway: 'Corridors & Hallways',
+  restroom: 'Restrooms', parking: 'Parking Lot',
+  elevator: 'Elevator', stairway: 'Stairs & Handrails',
+  signage: 'Signage & Wayfinding', drinking_fountain: 'Drinking Fountain',
+  dining: 'Dining Area', counter: 'Service Counter',
+  outdoor_seating: 'Outdoor Seating', cafeteria: 'Cafeteria / Dining Hall',
+  concession: 'Concession Stand', sales_floor: 'Sales Floor & Aisles',
+  checkout: 'Checkout Counter', fitting_room: 'Fitting Room',
+  reception: 'Reception Desk', conference_room: 'Conference Room',
+  break_room: 'Break Room / Kitchen', waiting_room: 'Waiting Room',
+  exam_room: 'Examination Room', patient_room: 'Patient Room',
+  pharmacy: 'Pharmacy Counter', lobby: 'Hotel Lobby',
+  guest_room: 'Accessible Guest Room', pool: 'Pool & Spa Area',
+  fitness_center: 'Fitness Center', classroom: 'Classroom',
+  gymnasium: 'Gymnasium', auditorium: 'Auditorium',
+  library: 'Library', assembly_seating: 'Assembly Seating',
+  stage: 'Stage Access', ticket_booth: 'Ticket / Box Office',
 };
 
 const MODULE_ICONS = {
-  entrance: '🚪',
-  corridors: '🏛️',
-  restrooms: '🚻',
-  stairs: '🪜',
-  parking: '🅿️',
-  counter: '🏪',
-  elevator: '🛗',
-  signage: '🪧',
+  entrance: '🚪', hallway: '🏛️', restroom: '🚻', parking: '🅿️',
+  elevator: '🛗', stairway: '🪜', signage: '🪧', drinking_fountain: '💧',
+  dining: '🍽️', counter: '🏪', outdoor_seating: '🌿', cafeteria: '🥗',
+  concession: '🍿', sales_floor: '🛍️', checkout: '🧾', fitting_room: '👗',
+  reception: '🗂️', conference_room: '💼', break_room: '☕',
+  waiting_room: '🪑', exam_room: '🩺', patient_room: '🛏️', pharmacy: '💊',
+  lobby: '🏨', guest_room: '🛎️', pool: '🏊', fitness_center: '🏋️',
+  classroom: '📚', gymnasium: '🏀', auditorium: '🎭', library: '📖',
+  assembly_seating: '🎪', stage: '🎤', ticket_booth: '🎟️',
 };
 
 function parseCostRange(str) {

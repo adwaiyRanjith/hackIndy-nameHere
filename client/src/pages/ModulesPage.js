@@ -1,98 +1,135 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ModulesPage.css';
+import { getAudit } from '../api';
 
-const ALL_MODULES = [
-  {
-    id: 'entrance',
-    label: 'Entrance & Doorways',
-    icon: '🚪',
-    description: 'Main entrance, door widths, thresholds, hardware',
-  },
-  {
-    id: 'corridors',
-    label: 'Corridors & Hallways',
-    icon: '🏛️',
-    description: 'Hallway widths, obstructions, turning space',
-  },
-  {
-    id: 'restrooms',
-    label: 'Restrooms',
-    icon: '🚻',
-    description: 'Accessible stall, grab bars, sink height, signage',
-  },
-  {
-    id: 'stairs',
-    label: 'Stairs & Ramps',
-    icon: '🪜',
-    description: 'Handrails, ramp slope, step nosings, landings',
-  },
-  {
-    id: 'parking',
-    label: 'Parking Lot',
-    icon: '🅿️',
-    description: 'Accessible spaces, van spaces, signage, path of travel',
-  },
-  {
-    id: 'counter',
-    label: 'Service Counter',
-    icon: '🏪',
-    description: 'Counter height, reach range, knee clearance',
-  },
-  {
-    id: 'elevator',
-    label: 'Elevator',
-    icon: '🛗',
-    description: 'Door width, controls height, braille signage, floor announcements',
-  },
-  {
-    id: 'signage',
-    label: 'Signage',
-    icon: '🪧',
-    description: 'Braille, raised characters, mounting height, placement',
-  },
-];
+const MODULE_META = {
+  entrance:          { label: 'Entrance & Doorways',       icon: '🚪', description: 'Door width, hardware, threshold, signage, ramps' },
+  hallway:           { label: 'Corridors & Hallways',      icon: '🏛️', description: 'Hallway widths, obstructions, floor surface, signage' },
+  restroom:          { label: 'Restrooms',                 icon: '🚻', description: 'Grab bars, faucet, door swing, clearance, mirror' },
+  parking:           { label: 'Parking Lot',               icon: '🅿️', description: 'Accessible spaces, signage, access aisles, curb ramps' },
+  elevator:          { label: 'Elevator',                  icon: '🛗', description: 'Call button height, cab size, controls, braille' },
+  stairway:          { label: 'Stairs & Handrails',        icon: '🪜', description: 'Handrail height, extensions, nosing contrast' },
+  signage:           { label: 'Signage & Wayfinding',      icon: '🪧', description: 'Height, braille, high contrast, mounting location' },
+  drinking_fountain: { label: 'Drinking Fountain',         icon: '💧', description: 'Spout height, knee clearance, hi-lo units' },
+  dining:            { label: 'Dining Area',               icon: '🍽️', description: 'Table heights, aisle widths, accessible seating' },
+  counter:           { label: 'Service Counter',           icon: '🏪', description: 'Counter height, accessible section, approach clearance' },
+  outdoor_seating:   { label: 'Outdoor Seating',           icon: '🌿', description: 'Surface, route from entrance, accessible tables' },
+  cafeteria:         { label: 'Cafeteria / Dining Hall',   icon: '🥗', description: 'Food line height, tray slide, aisle widths' },
+  concession:        { label: 'Concession Stand',          icon: '🍿', description: 'Counter height, accessible section, queue setup' },
+  sales_floor:       { label: 'Sales Floor & Aisles',      icon: '🛍️', description: 'Aisle width, protruding displays, accessible route' },
+  checkout:          { label: 'Checkout Counter',          icon: '🧾', description: 'Counter height, PIN pad reach, queue width' },
+  fitting_room:      { label: 'Fitting Room',              icon: '👗', description: 'Door width, turning space, bench height' },
+  reception:         { label: 'Reception Desk',            icon: '🗂️', description: 'Counter height, accessible section, approach space' },
+  conference_room:   { label: 'Conference Room',           icon: '💼', description: 'Door width, table height, knee clearance, turning space' },
+  break_room:        { label: 'Break Room / Kitchen',      icon: '☕', description: 'Counter heights, sink clearance, appliance reach' },
+  waiting_room:      { label: 'Waiting Room',              icon: '🪑', description: 'Wheelchair spaces, aisle widths, check-in counter' },
+  exam_room:         { label: 'Examination Room',          icon: '🩺', description: 'Exam table height, door width, turning space' },
+  patient_room:      { label: 'Patient Room',              icon: '🛏️', description: 'Bed clearance, bathroom access, call button' },
+  pharmacy:          { label: 'Pharmacy Counter',          icon: '💊', description: 'Counter height, consultation window, PIN pad' },
+  lobby:             { label: 'Hotel Lobby',               icon: '🏨', description: 'Check-in desk height, route to elevator, seating' },
+  guest_room:        { label: 'Accessible Guest Room',     icon: '🛎️', description: 'Bed clearance, roll-in shower, grab bars, controls' },
+  pool:              { label: 'Pool & Spa Area',            icon: '🏊', description: 'Pool lift or sloped entry, deck surface, locker access' },
+  fitness_center:    { label: 'Fitness Center',            icon: '🏋️', description: 'Equipment aisles, accessible machines, locker heights' },
+  classroom:         { label: 'Classroom',                 icon: '📚', description: 'Desk aisles, accessible desk, whiteboard reach' },
+  gymnasium:         { label: 'Gymnasium',                 icon: '🏀', description: 'Accessible seating, route to floor, locker access' },
+  auditorium:        { label: 'Auditorium',                icon: '🎭', description: 'Wheelchair spaces, companion seats, stage access' },
+  library:           { label: 'Library',                   icon: '📖', description: 'Aisle widths, shelf reach, study tables, checkout' },
+  assembly_seating:  { label: 'Assembly Seating',          icon: '🎪', description: 'Wheelchair spaces, companion seats, sight lines' },
+  stage:             { label: 'Stage Access',              icon: '🎤', description: 'Ramp or lift, handrails, approach clearance' },
+  ticket_booth:      { label: 'Ticket / Box Office',       icon: '🎟️', description: 'Counter height, accessible window, approach space' },
+};
 
 function ModulesPage() {
   const navigate = useNavigate();
   const survey = JSON.parse(localStorage.getItem('surveyAnswers') || '{}');
-  const [modules, setModules] = useState(() => {
-    const saved = localStorage.getItem('auditModules');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const auditId = localStorage.getItem('auditId');
+
+  const [applicableModules, setApplicableModules] = useState([]);
+  const [moduleStatusMap, setModuleStatusMap] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('auditModules', JSON.stringify(modules));
-  }, [modules]);
+    if (!auditId) {
+      setLoading(false);
+      return;
+    }
 
-  const visibleModules = ALL_MODULES.filter((m) => {
-    if (m.id === 'parking' && survey.hasParking === 'No') return false;
-    if (m.id === 'elevator' && survey.hasElevator === 'No') return false;
-    if (m.id === 'stairs' && survey.hasRamps === 'No') return false;
-    return true;
-  });
+    let cancelled = false;
 
-  const completedCount = Object.values(modules).filter(
+    async function poll() {
+      try {
+        const audit = await getAudit(auditId);
+        if (cancelled) return;
+
+        if (audit.applicable_modules?.length) {
+          setApplicableModules(audit.applicable_modules);
+        }
+
+        const statusMap = {};
+        for (const m of audit.modules || []) {
+          const existing = statusMap[m.module_type];
+          // Prefer complete modules; among equal status keep the most recent (last pushed)
+          if (!existing || m.status === 'complete' || existing.status !== 'complete') {
+            statusMap[m.module_type] = m;
+          }
+        }
+        setModuleStatusMap(statusMap);
+
+        // Sync to localStorage so ReportPage can read findings
+        // Merge into existing — never erase findings saved by VideoUploadPage
+        const existingLocal = JSON.parse(localStorage.getItem('auditModules') || '{}');
+        for (const [type, m] of Object.entries(statusMap)) {
+          if (m.status === 'complete') {
+            existingLocal[type] = existingLocal[type] || { status: 'complete', findings: [] };
+          }
+        }
+        localStorage.setItem('auditModules', JSON.stringify(existingLocal));
+      } catch (err) {
+        console.error('Failed to load audit:', err);
+      }
+      if (!cancelled) setLoading(false);
+    }
+
+    poll();
+    const interval = setInterval(poll, 4000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [auditId]);
+
+  const completedCount = Object.values(moduleStatusMap).filter(
     (m) => m.status === 'complete'
   ).length;
 
-  const handleAudit = (moduleId) => {
-    navigate(`/module/${moduleId}`);
+  const getStatus = (moduleType) => moduleStatusMap[moduleType]?.status || 'pending';
+
+  const getViolationCount = (moduleType) => {
+    const m = moduleStatusMap[moduleType];
+    return m?.violations?.length ?? 0;
   };
 
-  const handleFinalize = () => {
-    navigate('/report');
-  };
-
-  const getStatus = (moduleId) => modules[moduleId]?.status || 'pending';
+  if (loading) {
+    return (
+      <div className="modules-container">
+        <div className="modules-header">
+          <div className="modules-logo">
+            <span className="logo-icon">&#10003;</span>
+            <span className="logo-text">Passline</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', paddingTop: '80px', color: 'var(--overlay0)' }}>
+          Loading modules...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="modules-container">
       <div className="modules-header">
-        <div className="modules-logo">
+        <button className="modules-logo" onClick={() => navigate('/audit-choice')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}>
           <span className="logo-icon">&#10003;</span>
           <span className="logo-text">Passline</span>
-        </div>
+        </button>
         <button className="back-link" onClick={() => navigate('/survey')}>
           &#8249; Edit Survey
         </button>
@@ -109,32 +146,49 @@ function ModulesPage() {
             </p>
           </div>
           <div className="progress-pill">
-            {completedCount} / {visibleModules.length} done
+            {completedCount} / {applicableModules.length} done
           </div>
         </div>
 
         <div className="module-grid">
-          {visibleModules.map((mod) => {
-            const status = getStatus(mod.id);
+          {applicableModules.map((moduleType) => {
+            const meta = MODULE_META[moduleType] || { label: moduleType, icon: '📷', description: '' };
+            const status = getStatus(moduleType);
+            const violationCount = getViolationCount(moduleType);
+
             return (
               <div
-                key={mod.id}
+                key={moduleType}
                 className={`module-card ${status === 'complete' ? 'module-complete' : ''}`}
               >
-                <div className="module-icon">{mod.icon}</div>
+                <div className="module-icon">{meta.icon}</div>
                 <div className="module-info">
-                  <div className="module-label">{mod.label}</div>
-                  <div className="module-desc">{mod.description}</div>
+                  <div className="module-label">{meta.label}</div>
+                  <div className="module-desc">{meta.description}</div>
+                  {status === 'complete' && violationCount > 0 && (
+                    <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--red)' }}>
+                      {violationCount} violation{violationCount !== 1 ? 's' : ''} found
+                    </div>
+                  )}
+                  {status === 'complete' && violationCount === 0 && (
+                    <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--green)' }}>
+                      No violations
+                    </div>
+                  )}
                 </div>
                 <div className="module-actions">
                   {status === 'complete' ? (
                     <span className="status-badge status-done">&#10003; Done</span>
-                  ) : (
+                  ) : status === 'pending' ? (
                     <span className="status-badge status-pending">Not started</span>
+                  ) : (
+                    <span className="status-badge status-pending" style={{ color: 'var(--lavender)' }}>
+                      Processing...
+                    </span>
                   )}
                   <button
                     className="audit-btn"
-                    onClick={() => handleAudit(mod.id)}
+                    onClick={() => navigate(`/module/${moduleType}`)}
                   >
                     {status === 'complete' ? 'Re-audit' : 'Audit'}
                   </button>
@@ -148,7 +202,7 @@ function ModulesPage() {
           <button
             className="finalize-btn"
             disabled={completedCount === 0}
-            onClick={handleFinalize}
+            onClick={() => navigate('/report')}
           >
             Finalize Audit &amp; Generate Report
           </button>

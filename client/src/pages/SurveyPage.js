@@ -8,10 +8,26 @@ const FACILITY_TYPE_MAP = {
   'Retail Store': 'retail',
   'Restaurant / Food Service': 'restaurant',
   'Medical / Healthcare Facility': 'medical',
-  'School / Educational Facility': 'other',
+  'School / Educational Facility': 'education',
   'Hotel / Lodging': 'hotel',
   'Warehouse / Industrial': 'other',
   'Other': 'other',
+};
+
+const STATE_ABBR = {
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+  'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+  'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+  'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+  'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+  'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+  'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+  'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+  'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+  'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+  'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+  'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+  'Wisconsin': 'WI', 'Wyoming': 'WY',
 };
 
 function getBuildingAge(yearBuilt) {
@@ -88,13 +104,13 @@ function SurveyPage() {
       try {
         const { audit_id } = await createAudit();
         await saveQuestionnaire(audit_id, {
-          state: form.state,
+          state: STATE_ABBR[form.state] || form.state,
           facility_type: FACILITY_TYPE_MAP[form.buildingType] || 'other',
           building_age: getBuildingAge(form.yearBuilt),
           recent_renovation: form.lastRenovation
-            ? (new Date().getFullYear() - parseInt(form.lastRenovation)) <= 10
+            ? (new Date().getFullYear() - parseInt(form.lastRenovation)) <= 3
             : false,
-          parking_spaces: form.hasParking === 'Yes' ? 1 : 0,
+          parking_spaces: form.hasParking === 'Yes' ? 10 : 0,
         });
         localStorage.setItem('auditId', audit_id);
       } catch (err) {

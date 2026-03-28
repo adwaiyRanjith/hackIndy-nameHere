@@ -26,7 +26,22 @@
   color: var(--overlay1);
   font-size: 0.925rem;
   font-weight: 400;
-  margin: 0;
+  margin: 0 0 14px 0;
+}
+
+.choice-logout-btn {
+  background: none;
+  border: none;
+  color: var(--overlay0);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.775rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.choice-logout-btn:hover {
+  color: var(--red);
 }
 
 .choice-cards {

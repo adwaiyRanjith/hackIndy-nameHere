@@ -40,10 +40,10 @@ uvicorn main:app --port 8000
 ### Frontend
 
 ```bash
-cd frontend
+cd client
 brew install node
 npm install
-npm run dev   # Runs on http://localhost:3000
+npm start   # Runs on http://localhost:3000
 ```
 
 ## Environment Variables

@@ -19,7 +19,7 @@ function StartPage() {
         <div className="start-logo">
           <span className="logo-icon">&#10003;</span>
         </div>
-        <h1 className="start-title">AuditFlow</h1>
+        <h1 className="start-title">Passline</h1>
         <p className="start-subtitle">Begin your audit session below</p>
 
         <form className="start-form" onSubmit={handleSubmit}>

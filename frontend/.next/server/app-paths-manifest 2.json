@@ -1,8 +1,0 @@
-{
-  "/audit/[id]/modules/page": "app/audit/[id]/modules/page.js",
-  "/audit/[id]/questionnaire/page": "app/audit/[id]/questionnaire/page.js",
-  "/audit/[id]/processing/[moduleId]/page": "app/audit/[id]/processing/[moduleId]/page.js",
-  "/audit/[id]/capture/[moduleType]/page": "app/audit/[id]/capture/[moduleType]/page.js",
-  "/page": "app/page.js",
-  "/audit/[id]/report/page": "app/audit/[id]/report/page.js"
-}

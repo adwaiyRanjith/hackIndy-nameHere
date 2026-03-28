@@ -20,11 +20,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/audit/[id]/modules/page.js"
-    ],
-    "/audit/[id]/capture/[moduleType]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/audit/[id]/capture/[moduleType]/page.js"
     ]
   }
 }

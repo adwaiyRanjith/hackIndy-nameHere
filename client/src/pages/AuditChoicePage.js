@@ -4,13 +4,19 @@ import './AuditChoicePage.css';
 function AuditChoicePage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const name = location.state?.name || 'Auditor';
+  const name = location.state?.name || localStorage.getItem('userName') || 'Auditor';
+
+  const handleLogout = () => {
+    localStorage.removeItem('userName');
+    navigate('/');
+  };
 
   return (
     <div className="choice-container">
       <div className="choice-header">
         <h1 className="choice-title">Welcome, {name}</h1>
         <p className="choice-subtitle">What would you like to do?</p>
+        <button className="choice-logout-btn" onClick={handleLogout}>Log out</button>
       </div>
 
       <div className="choice-cards">

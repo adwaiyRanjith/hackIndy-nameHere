@@ -18,16 +18,26 @@ function DashboardPage() {
     navigate('/survey');
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('userName');
+    navigate('/');
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <div className="dashboard-logo">
+        <button className="dashboard-logo" onClick={() => navigate('/audit-choice')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}>
           <span className="logo-icon">&#10003;</span>
           <span className="logo-text">Passline</span>
-        </div>
-        <button className="new-audit-btn" onClick={handleStartNewAudit}>
-          + New Audit
         </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button className="new-audit-btn" onClick={handleStartNewAudit}>
+            + New Audit
+          </button>
+          <button className="new-audit-btn" onClick={handleLogout} style={{ background: 'transparent', color: 'var(--overlay1)', border: '1px solid var(--surface1)' }}>
+            Log out
+          </button>
+        </div>
       </div>
 
       <div className="dashboard-content">

@@ -16,6 +16,12 @@ export async function saveQuestionnaire(auditId, data) {
   return res.json(); // { audit_id, applicable_modules, rule_count }
 }
 
+export async function getAudit(auditId) {
+  const res = await fetch(`${BASE_URL}/audits/${auditId}`);
+  if (!res.ok) throw new Error('Failed to get audit');
+  return res.json();
+}
+
 export async function createModule(auditId, moduleType) {
   const res = await fetch(`${BASE_URL}/audits/${auditId}/modules`, {
     method: 'POST',
