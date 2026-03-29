@@ -100,9 +100,12 @@ def measure_width_from_bbox(
     Returns width in inches, or None.
     """
     h, w = image.shape[:2]
-    x1 = int(bbox_norm["x1"] * w)
-    x2 = int(bbox_norm["x2"] * w)
-    y_mid = int(((bbox_norm["y1"] + bbox_norm["y2"]) / 2) * h)
+    try:
+        x1 = int(float(bbox_norm["x1"]) * w)
+        x2 = int(float(bbox_norm["x2"]) * w)
+        y_mid = int(((float(bbox_norm["y1"]) + float(bbox_norm["y2"])) / 2) * h)
+    except (TypeError, ValueError):
+        return None
 
     pixel_width = abs(x2 - x1)
     if pixel_width == 0:

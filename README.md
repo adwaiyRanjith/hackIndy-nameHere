@@ -34,7 +34,7 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # Run
-uvicorn main:app --port 8000
+source venv/bin/activate && uvicorn main:app --port 8000
 ```
 
 ### Frontend

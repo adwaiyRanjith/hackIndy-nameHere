@@ -190,6 +190,31 @@
   text-align: center;
 }
 
+.add-room-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 24px;
+  background-color: var(--green);
+  color: var(--crust);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.add-room-btn:hover:not(:disabled) {
+  background-color: var(--teal);
+}
+
+.add-room-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .finalize-btn {
   width: 100%;
   padding: 13px;

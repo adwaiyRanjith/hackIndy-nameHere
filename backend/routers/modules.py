@@ -14,7 +14,7 @@ from models.audit import CreateModuleRequest, CreateModuleResponse, ModuleStatus
 from services.video_processing import extract_key_frames, VideoProcessingError
 from services.calibration import calibrate_frames
 from services.depth_estimation import process_frames_depth
-from services.gemini_analysis import analyze_module, get_default_result
+from services.gemini_analysis import analyze_module, classify_room, get_default_result
 from services.compliance_checker import check_module_compliance
 
 router = APIRouter()
@@ -192,6 +192,17 @@ async def run_processing_pipeline(
         })
         frame_paths = await extract_key_frames(video_path, audit_id, module_id)
 
+        # --- Step 3b: Auto-classify room type if not specified ---
+        if module_type == "auto":
+            await _update_module(db, audit_id, module_id, {
+                "status": "classifying", "progress": 12,
+            })
+            module_type = await classify_room(frame_paths)
+            await _update_module(db, audit_id, module_id, {
+                "module_type": module_type, "progress": 18,
+            })
+            logger.info(f"Module {module_id} auto-classified as: {module_type}")
+
         # --- Step 4: Calibration ---
         await _update_module(db, audit_id, module_id, {
             "status": "analyzing", "progress": 25, "key_frames": frame_paths
@@ -301,25 +312,34 @@ def _generate_annotated_frames(
 
         h, w = img.shape[:2]
 
+        def _bbox_coords(bbox, img_w, img_h):
+            try:
+                return (
+                    int(float(bbox["x1"]) * img_w),
+                    int(float(bbox["y1"]) * img_h),
+                    int(float(bbox["x2"]) * img_w),
+                    int(float(bbox["y2"]) * img_h),
+                )
+            except (TypeError, ValueError):
+                return None
+
         # Draw door bounding box if present
         bbox = gemini_result.get("door_bounding_box")
         if bbox:
-            x1 = int(bbox["x1"] * w)
-            y1 = int(bbox["y1"] * h)
-            x2 = int(bbox["x2"] * w)
-            y2 = int(bbox["y2"] * h)
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(img, "Door", (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            coords = _bbox_coords(bbox, w, h)
+            if coords:
+                x1, y1, x2, y2 = coords
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(img, "Door", (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         # Draw clearance bounding box if present
         cbbox = gemini_result.get("clearance_bounding_box")
         if cbbox:
-            x1 = int(cbbox["x1"] * w)
-            y1 = int(cbbox["y1"] * h)
-            x2 = int(cbbox["x2"] * w)
-            y2 = int(cbbox["y2"] * h)
-            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 165, 0), 2)
-            cv2.putText(img, "Clearance", (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 165, 0), 2)
+            coords = _bbox_coords(cbbox, w, h)
+            if coords:
+                x1, y1, x2, y2 = coords
+                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 165, 0), 2)
+                cv2.putText(img, "Clearance", (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 165, 0), 2)
 
         ann_name = f"annotated_{i + 1:03d}.jpg"
         ann_path = out_dir / ann_name

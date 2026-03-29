@@ -16,7 +16,7 @@ from typing import List, Optional
 from google import genai  # type: ignore
 from google.genai import types as genai_types  # type: ignore
 
-from config import GEMINI_API_KEY, FRAMES_DIR
+from config import GEMINI_API_KEY, FRAMES_DIR, MODULE_TYPES
 
 logger = logging.getLogger(__name__)
 
@@ -216,6 +216,59 @@ async def analyze_module(
             logger.warning(f"Bounding box extraction failed: {e}. Proceeding without.")
 
     return result
+
+
+async def classify_room(frame_paths: List[str]) -> str:
+    """
+    Use Gemini to identify the room/space type from extracted frames.
+    Returns one of the MODULE_TYPES strings. Falls back to 'entrance' on failure.
+    """
+    selected_paths = frame_paths[:5]
+    image_parts = []
+    for p in selected_paths:
+        try:
+            image_parts.append(_load_frame_as_part(p))
+        except Exception as e:
+            logger.warning(f"Could not load frame {p} for classification: {e}")
+
+    if not image_parts:
+        logger.warning("No frames available for room classification — defaulting to 'entrance'")
+        return "entrance"
+
+    types_list = ", ".join(MODULE_TYPES)
+    prompt = (
+        "You are analyzing frames from a building space for ADA compliance auditing.\n"
+        "Identify what type of space or room is shown in these images.\n\n"
+        f"You MUST return exactly one value from this list:\n{types_list}\n\n"
+        'Return ONLY a JSON object with this exact structure: {"room_type": "<value>"}\n'
+        "No explanation, no markdown, just the JSON."
+    )
+
+    try:
+        config = genai_types.GenerateContentConfig(
+            response_mime_type="application/json",
+            temperature=0.0,
+        )
+        response = _get_client().models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[prompt] + image_parts,
+            config=config,
+        )
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        result = json.loads(text)
+        detected = result.get("room_type", "").strip()
+        if detected in MODULE_TYPES:
+            logger.info(f"Room classified as: {detected}")
+            return detected
+        logger.warning(f"Gemini returned unrecognized room type '{detected}' — defaulting to 'entrance'")
+    except Exception as e:
+        logger.error(f"Room classification failed: {e} — defaulting to 'entrance'")
+
+    return "entrance"
 
 
 def get_default_result(module_type: str) -> dict:

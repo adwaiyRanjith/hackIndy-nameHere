@@ -430,10 +430,17 @@ function VideoUploadPage() {
   const fileInputRef = useRef();
   const pollRef = useRef(null);
 
+  const isAuto = moduleType === 'auto';
   const info = MODULE_INFO[moduleType] || {
-    label: 'Unknown Module',
-    icon: '📹',
-    instructions: [],
+    label: isAuto ? 'Add Room' : 'Unknown Module',
+    icon: isAuto ? '🔍' : '📹',
+    instructions: isAuto ? [
+      'Walk slowly through the entire room at a steady pace',
+      'Pan left and right to show all features — doors, walls, floor surface',
+      'Capture any accessibility features: grab bars, counters, signs, ramps',
+      'Hold each angle for at least 2 seconds',
+      'Ensure good lighting throughout',
+    ] : [],
   };
 
   const [phase, setPhase] = useState('upload'); // upload | recording | analyzing | results
@@ -443,6 +450,7 @@ function VideoUploadPage() {
   const [findings, setFindings] = useState([]);
   const [backendModuleId, setBackendModuleId] = useState(null);
   const [error, setError] = useState(null);
+  const [detectedModuleType, setDetectedModuleType] = useState(null);
 
   // Recording state
   const videoPreviewRef = useRef();
@@ -464,19 +472,34 @@ function VideoUploadPage() {
     if (createStartedRef.current) return;
     createStartedRef.current = true;
 
-    const stored = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
-    if (stored[moduleType]) {
-      setBackendModuleId(stored[moduleType]);
+    if (moduleType === 'auto') {
+      // ModulesPage already called createModule and stored the id
+      const existingId = localStorage.getItem('currentAutoModuleId');
+      if (existingId) {
+        setBackendModuleId(existingId);
+      } else {
+        // Fallback: create a new auto module
+        createModule(auditId, 'auto')
+          .then(({ module_id }) => {
+            localStorage.setItem('currentAutoModuleId', module_id);
+            setBackendModuleId(module_id);
+          })
+          .catch((err) => console.error('Failed to create auto module:', err));
+      }
     } else {
-      createModule(auditId, moduleType)
-        .then(({ module_id }) => {
-          // Re-read localStorage to avoid overwriting a concurrent write
-          const latest = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
-          latest[moduleType] = module_id;
-          localStorage.setItem('auditModuleIds', JSON.stringify(latest));
-          setBackendModuleId(module_id);
-        })
-        .catch((err) => console.error('Failed to create module:', err));
+      const stored = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
+      if (stored[moduleType]) {
+        setBackendModuleId(stored[moduleType]);
+      } else {
+        createModule(auditId, moduleType)
+          .then(({ module_id }) => {
+            const latest = JSON.parse(localStorage.getItem('auditModuleIds') || '{}');
+            latest[moduleType] = module_id;
+            localStorage.setItem('auditModuleIds', JSON.stringify(latest));
+            setBackendModuleId(module_id);
+          })
+          .catch((err) => console.error('Failed to create module:', err));
+      }
     }
 
     return () => {
@@ -526,9 +549,13 @@ function VideoUploadPage() {
         try {
           const status = await getModuleStatus(auditId, bModuleId);
           setProgress(status.progress || 0);
+          if (status.module_type && status.module_type !== 'auto') {
+            setDetectedModuleType(status.module_type);
+          }
 
           const labels = {
             extracting_frames: 'Extracting frames and removing duplicates...',
+            classifying: 'Identifying room type...',
             analyzing: 'Running AI analysis...',
             checking_compliance: 'Checking against ADA guidelines...',
             complete: 'Done!',
@@ -688,7 +715,9 @@ function VideoUploadPage() {
           &#8249; Back to Modules
         </button>
         <span className="module-badge">
-          {info.icon} {info.label}
+          {detectedModuleType
+            ? `${MODULE_INFO[detectedModuleType]?.icon ?? '📷'} ${MODULE_INFO[detectedModuleType]?.label ?? detectedModuleType}`
+            : `${info.icon} ${info.label}`}
         </span>
       </div>
 

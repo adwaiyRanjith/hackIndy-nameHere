@@ -113,11 +113,12 @@ function SurveyPage() {
           parking_spaces: form.hasParking === 'Yes' ? 10 : 0,
         });
         localStorage.setItem('auditId', audit_id);
+        navigate('/modules');
       } catch (err) {
         console.error('Failed to create audit:', err);
+        alert('Could not connect to the server. Make sure the backend is running and try again.');
       } finally {
         setLoading(false);
-        navigate('/modules');
       }
     }
   };

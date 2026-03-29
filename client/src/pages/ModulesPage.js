@@ -1,43 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ModulesPage.css';
-import { getAudit } from '../api';
+import { getAudit, createModule } from '../api';
 
 const MODULE_META = {
-  entrance:          { label: 'Entrance & Doorways',       icon: '🚪', description: 'Door width, hardware, threshold, signage, ramps' },
-  hallway:           { label: 'Corridors & Hallways',      icon: '🏛️', description: 'Hallway widths, obstructions, floor surface, signage' },
-  restroom:          { label: 'Restrooms',                 icon: '🚻', description: 'Grab bars, faucet, door swing, clearance, mirror' },
-  parking:           { label: 'Parking Lot',               icon: '🅿️', description: 'Accessible spaces, signage, access aisles, curb ramps' },
-  elevator:          { label: 'Elevator',                  icon: '🛗', description: 'Call button height, cab size, controls, braille' },
-  stairway:          { label: 'Stairs & Handrails',        icon: '🪜', description: 'Handrail height, extensions, nosing contrast' },
-  signage:           { label: 'Signage & Wayfinding',      icon: '🪧', description: 'Height, braille, high contrast, mounting location' },
-  drinking_fountain: { label: 'Drinking Fountain',         icon: '💧', description: 'Spout height, knee clearance, hi-lo units' },
-  dining:            { label: 'Dining Area',               icon: '🍽️', description: 'Table heights, aisle widths, accessible seating' },
-  counter:           { label: 'Service Counter',           icon: '🏪', description: 'Counter height, accessible section, approach clearance' },
-  outdoor_seating:   { label: 'Outdoor Seating',           icon: '🌿', description: 'Surface, route from entrance, accessible tables' },
-  cafeteria:         { label: 'Cafeteria / Dining Hall',   icon: '🥗', description: 'Food line height, tray slide, aisle widths' },
-  concession:        { label: 'Concession Stand',          icon: '🍿', description: 'Counter height, accessible section, queue setup' },
-  sales_floor:       { label: 'Sales Floor & Aisles',      icon: '🛍️', description: 'Aisle width, protruding displays, accessible route' },
-  checkout:          { label: 'Checkout Counter',          icon: '🧾', description: 'Counter height, PIN pad reach, queue width' },
-  fitting_room:      { label: 'Fitting Room',              icon: '👗', description: 'Door width, turning space, bench height' },
-  reception:         { label: 'Reception Desk',            icon: '🗂️', description: 'Counter height, accessible section, approach space' },
-  conference_room:   { label: 'Conference Room',           icon: '💼', description: 'Door width, table height, knee clearance, turning space' },
-  break_room:        { label: 'Break Room / Kitchen',      icon: '☕', description: 'Counter heights, sink clearance, appliance reach' },
-  waiting_room:      { label: 'Waiting Room',              icon: '🪑', description: 'Wheelchair spaces, aisle widths, check-in counter' },
-  exam_room:         { label: 'Examination Room',          icon: '🩺', description: 'Exam table height, door width, turning space' },
-  patient_room:      { label: 'Patient Room',              icon: '🛏️', description: 'Bed clearance, bathroom access, call button' },
-  pharmacy:          { label: 'Pharmacy Counter',          icon: '💊', description: 'Counter height, consultation window, PIN pad' },
-  lobby:             { label: 'Hotel Lobby',               icon: '🏨', description: 'Check-in desk height, route to elevator, seating' },
-  guest_room:        { label: 'Accessible Guest Room',     icon: '🛎️', description: 'Bed clearance, roll-in shower, grab bars, controls' },
-  pool:              { label: 'Pool & Spa Area',            icon: '🏊', description: 'Pool lift or sloped entry, deck surface, locker access' },
-  fitness_center:    { label: 'Fitness Center',            icon: '🏋️', description: 'Equipment aisles, accessible machines, locker heights' },
-  classroom:         { label: 'Classroom',                 icon: '📚', description: 'Desk aisles, accessible desk, whiteboard reach' },
-  gymnasium:         { label: 'Gymnasium',                 icon: '🏀', description: 'Accessible seating, route to floor, locker access' },
-  auditorium:        { label: 'Auditorium',                icon: '🎭', description: 'Wheelchair spaces, companion seats, stage access' },
-  library:           { label: 'Library',                   icon: '📖', description: 'Aisle widths, shelf reach, study tables, checkout' },
-  assembly_seating:  { label: 'Assembly Seating',          icon: '🎪', description: 'Wheelchair spaces, companion seats, sight lines' },
-  stage:             { label: 'Stage Access',              icon: '🎤', description: 'Ramp or lift, handrails, approach clearance' },
-  ticket_booth:      { label: 'Ticket / Box Office',       icon: '🎟️', description: 'Counter height, accessible window, approach space' },
+  entrance:          { label: 'Entrance & Doorways',       icon: '🚪' },
+  hallway:           { label: 'Corridors & Hallways',      icon: '🏛️' },
+  restroom:          { label: 'Restrooms',                 icon: '🚻' },
+  parking:           { label: 'Parking Lot',               icon: '🅿️' },
+  elevator:          { label: 'Elevator',                  icon: '🛗' },
+  stairway:          { label: 'Stairs & Handrails',        icon: '🪜' },
+  signage:           { label: 'Signage & Wayfinding',      icon: '🪧' },
+  drinking_fountain: { label: 'Drinking Fountain',         icon: '💧' },
+  dining:            { label: 'Dining Area',               icon: '🍽️' },
+  counter:           { label: 'Service Counter',           icon: '🏪' },
+  outdoor_seating:   { label: 'Outdoor Seating',           icon: '🌿' },
+  cafeteria:         { label: 'Cafeteria / Dining Hall',   icon: '🥗' },
+  concession:        { label: 'Concession Stand',          icon: '🍿' },
+  sales_floor:       { label: 'Sales Floor & Aisles',      icon: '🛍️' },
+  checkout:          { label: 'Checkout Counter',          icon: '🧾' },
+  fitting_room:      { label: 'Fitting Room',              icon: '👗' },
+  reception:         { label: 'Reception Desk',            icon: '🗂️' },
+  conference_room:   { label: 'Conference Room',           icon: '💼' },
+  break_room:        { label: 'Break Room / Kitchen',      icon: '☕' },
+  waiting_room:      { label: 'Waiting Room',              icon: '🪑' },
+  exam_room:         { label: 'Examination Room',          icon: '🩺' },
+  patient_room:      { label: 'Patient Room',              icon: '🛏️' },
+  pharmacy:          { label: 'Pharmacy Counter',          icon: '💊' },
+  lobby:             { label: 'Hotel Lobby',               icon: '🏨' },
+  guest_room:        { label: 'Accessible Guest Room',     icon: '🛎️' },
+  pool:              { label: 'Pool & Spa Area',            icon: '🏊' },
+  fitness_center:    { label: 'Fitness Center',            icon: '🏋️' },
+  classroom:         { label: 'Classroom',                 icon: '📚' },
+  gymnasium:         { label: 'Gymnasium',                 icon: '🏀' },
+  auditorium:        { label: 'Auditorium',                icon: '🎭' },
+  library:           { label: 'Library',                   icon: '📖' },
+  assembly_seating:  { label: 'Assembly Seating',          icon: '🎪' },
+  stage:             { label: 'Stage Access',              icon: '🎤' },
+  ticket_booth:      { label: 'Ticket / Box Office',       icon: '🎟️' },
+  auto:              { label: 'Identifying room...',       icon: '🔍' },
 };
 
 function ModulesPage() {
@@ -45,9 +46,9 @@ function ModulesPage() {
   const survey = JSON.parse(localStorage.getItem('surveyAnswers') || '{}');
   const auditId = localStorage.getItem('auditId');
 
-  const [applicableModules, setApplicableModules] = useState([]);
-  const [moduleStatusMap, setModuleStatusMap] = useState({});
+  const [modules, setModules] = useState([]); // raw backend module docs
   const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     if (!auditId) {
@@ -62,26 +63,14 @@ function ModulesPage() {
         const audit = await getAudit(auditId);
         if (cancelled) return;
 
-        if (audit.applicable_modules?.length) {
-          setApplicableModules(audit.applicable_modules);
-        }
+        // Keep the most recent entry per module_id (each add-room creates a new module_id)
+        setModules(audit.modules || []);
 
-        const statusMap = {};
-        for (const m of audit.modules || []) {
-          const existing = statusMap[m.module_type];
-          // Prefer complete modules; among equal status keep the most recent (last pushed)
-          if (!existing || m.status === 'complete' || existing.status !== 'complete') {
-            statusMap[m.module_type] = m;
-          }
-        }
-        setModuleStatusMap(statusMap);
-
-        // Sync to localStorage so ReportPage can read findings
-        // Merge into existing — never erase findings saved by VideoUploadPage
+        // Sync complete modules to localStorage for ReportPage
         const existingLocal = JSON.parse(localStorage.getItem('auditModules') || '{}');
-        for (const [type, m] of Object.entries(statusMap)) {
+        for (const m of audit.modules || []) {
           if (m.status === 'complete') {
-            existingLocal[type] = existingLocal[type] || { status: 'complete', findings: [] };
+            existingLocal[m.module_id] = existingLocal[m.module_id] || { status: 'complete', findings: [] };
           }
         }
         localStorage.setItem('auditModules', JSON.stringify(existingLocal));
@@ -92,20 +81,32 @@ function ModulesPage() {
     }
 
     poll();
-    const interval = setInterval(poll, 4000);
+    const interval = setInterval(poll, 3000);
     return () => { cancelled = true; clearInterval(interval); };
   }, [auditId]);
 
-  const completedCount = Object.values(moduleStatusMap).filter(
-    (m) => m.status === 'complete'
-  ).length;
-
-  const getStatus = (moduleType) => moduleStatusMap[moduleType]?.status || 'pending';
-
-  const getViolationCount = (moduleType) => {
-    const m = moduleStatusMap[moduleType];
-    return m?.violations?.length ?? 0;
+  const handleAddRoom = async () => {
+    if (!auditId) {
+      console.error('No auditId in localStorage — go through survey first');
+      return;
+    }
+    if (adding) return;
+    setAdding(true);
+    try {
+      const { module_id } = await createModule(auditId, 'auto');
+      localStorage.setItem('currentAutoModuleId', module_id);
+      navigate(`/module/auto`);
+    } catch (err) {
+      console.error('Failed to create module:', err);
+      alert('Could not start room audit. Make sure the backend is running.');
+    } finally {
+      setAdding(false);
+    }
   };
+
+  const completedCount = modules.filter((m) => m.status === 'complete').length;
+  const activeStatuses = ['extracting_frames', 'classifying', 'analyzing', 'checking_compliance'];
+  const inProgressCount = modules.filter((m) => activeStatuses.includes(m.status)).length;
 
   if (loading) {
     return (
@@ -117,7 +118,7 @@ function ModulesPage() {
           </div>
         </div>
         <div style={{ textAlign: 'center', paddingTop: '80px', color: 'var(--overlay0)' }}>
-          Loading modules...
+          Loading audit...
         </div>
       </div>
     );
@@ -126,7 +127,11 @@ function ModulesPage() {
   return (
     <div className="modules-container">
       <div className="modules-header">
-        <button className="modules-logo" onClick={() => navigate('/audit-choice')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}>
+        <button
+          className="modules-logo"
+          onClick={() => navigate('/audit-choice')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}
+        >
           <span className="logo-icon">&#10003;</span>
           <span className="logo-text">Passline</span>
         </button>
@@ -138,65 +143,86 @@ function ModulesPage() {
       <div className="modules-content">
         <div className="modules-top">
           <div>
-            <h1 className="modules-title">Select a Module to Audit</h1>
+            <h1 className="modules-title">Audit Progress</h1>
             <p className="modules-sub">
               {survey.businessName
                 ? `Auditing: ${survey.businessName}`
-                : 'Choose a property component to analyze for ADA compliance.'}
+                : 'Record a video of any room or area to start an ADA check.'}
             </p>
           </div>
           <div className="progress-pill">
-            {completedCount} / {applicableModules.length} done
+            {completedCount} room{completedCount !== 1 ? 's' : ''} done
           </div>
         </div>
 
-        <div className="module-grid">
-          {applicableModules.map((moduleType) => {
-            const meta = MODULE_META[moduleType] || { label: moduleType, icon: '📷', description: '' };
-            const status = getStatus(moduleType);
-            const violationCount = getViolationCount(moduleType);
+        {/* Add Room button */}
+        <button
+          className="add-room-btn"
+          onClick={handleAddRoom}
+          disabled={adding || inProgressCount > 0}
+        >
+          {adding ? 'Starting...' : inProgressCount > 0 ? 'Finish current room first' : '+ Add Room'}
+        </button>
 
-            return (
-              <div
-                key={moduleType}
-                className={`module-card ${status === 'complete' ? 'module-complete' : ''}`}
-              >
-                <div className="module-icon">{meta.icon}</div>
-                <div className="module-info">
-                  <div className="module-label">{meta.label}</div>
-                  <div className="module-desc">{meta.description}</div>
-                  {status === 'complete' && violationCount > 0 && (
-                    <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--red)' }}>
-                      {violationCount} violation{violationCount !== 1 ? 's' : ''} found
-                    </div>
-                  )}
-                  {status === 'complete' && violationCount === 0 && (
-                    <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--green)' }}>
-                      No violations
-                    </div>
-                  )}
+        {/* Results / progress list */}
+        {modules.length > 0 && (
+          <div className="module-grid">
+            {[...modules].reverse().map((m) => {
+              const type = m.module_type || 'auto';
+              const meta = MODULE_META[type] || { label: type, icon: '📷' };
+              const violationCount = m.violations?.length ?? 0;
+              const isComplete = m.status === 'complete';
+              const isProcessing = !isComplete && m.status !== 'created';
+
+              return (
+                <div
+                  key={m.module_id}
+                  className={`module-card ${isComplete ? 'module-complete' : ''}`}
+                >
+                  <div className="module-icon">
+                    {isProcessing && !isComplete ? '⏳' : meta.icon}
+                  </div>
+                  <div className="module-info">
+                    <div className="module-label">{meta.label}</div>
+                    {isComplete && violationCount > 0 && (
+                      <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--red)' }}>
+                        {violationCount} violation{violationCount !== 1 ? 's' : ''} found
+                      </div>
+                    )}
+                    {isComplete && violationCount === 0 && (
+                      <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--green)' }}>
+                        No violations
+                      </div>
+                    )}
+                    {isProcessing && (
+                      <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--lavender)' }}>
+                        {m.status === 'classifying' ? 'Identifying room type...' : 'Analyzing...'}
+                        {m.progress > 0 ? ` ${m.progress}%` : ''}
+                      </div>
+                    )}
+                  </div>
+                  <div className="module-actions">
+                    {isComplete ? (
+                      <span className="status-badge status-done">&#10003; Done</span>
+                    ) : isProcessing ? (
+                      <span className="status-badge status-pending" style={{ color: 'var(--lavender)' }}>
+                        Processing...
+                      </span>
+                    ) : (
+                      <span className="status-badge status-pending">Created</span>
+                    )}
+                  </div>
                 </div>
-                <div className="module-actions">
-                  {status === 'complete' ? (
-                    <span className="status-badge status-done">&#10003; Done</span>
-                  ) : status === 'pending' ? (
-                    <span className="status-badge status-pending">Not started</span>
-                  ) : (
-                    <span className="status-badge status-pending" style={{ color: 'var(--lavender)' }}>
-                      Processing...
-                    </span>
-                  )}
-                  <button
-                    className="audit-btn"
-                    onClick={() => navigate(`/module/${moduleType}`)}
-                  >
-                    {status === 'complete' ? 'Re-audit' : 'Audit'}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
+
+        {modules.length === 0 && (
+          <div style={{ textAlign: 'center', paddingTop: '48px', color: 'var(--overlay0)', fontSize: '0.9rem' }}>
+            No rooms audited yet. Click <strong>+ Add Room</strong> to begin.
+          </div>
+        )}
 
         <div className="finalize-section">
           <button
@@ -207,7 +233,7 @@ function ModulesPage() {
             Finalize Audit &amp; Generate Report
           </button>
           {completedCount === 0 && (
-            <p className="finalize-hint">Complete at least one module to generate a report.</p>
+            <p className="finalize-hint">Complete at least one room to generate a report.</p>
           )}
         </div>
       </div>

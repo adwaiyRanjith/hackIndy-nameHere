@@ -16,21 +16,15 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("Connecting to MongoDB...")
+    import certifi
     app.state.mongo_client = AsyncIOMotorClient(
         MONGODB_URI,
-        tlsAllowInvalidCertificates=True,
+        tlsCAFile=certifi.where(),
     )
     app.state.db = app.state.mongo_client[MONGODB_DB]
     logger.info(f"Connected to MongoDB database: {MONGODB_DB}")
 
-    # Pre-load depth model to avoid cold-start during first request
-    from services.depth_estimation import DepthEstimator
-    estimator = DepthEstimator()
-    app.state.depth_estimator = estimator
-    if estimator.model is not None:
-        logger.info("DepthAnything V2 model loaded.")
-    else:
-        logger.warning("DepthAnything V2 unavailable — depth maps will use placeholder visuals.")
+    app.state.depth_estimator = None  # loaded lazily on first video upload
 
     yield
 
@@ -43,7 +37,7 @@ app = FastAPI(title="PASSLINE API", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:3003"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

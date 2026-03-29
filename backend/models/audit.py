@@ -44,7 +44,7 @@ class ViolationWithNarrative(Violation):
 class AuditModule(BaseModel):
     module_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     module_type: str
-    status: str = "uploading"  # uploading | extracting_frames | analyzing | checking_compliance | complete | error
+    status: str = "uploading"  # uploading | extracting_frames | classifying | analyzing | checking_compliance | complete | error
     progress: int = 0
     video_path: Optional[str] = None
     key_frames: List[str] = []
