@@ -2,6 +2,15 @@
 
 Record video of your building. Get a professional ADA compliance report.
 
+## Project Description
+Passline is an ADA (Americans with Disabilities Act) compliance audit tool built to streamline accessibility inspections for buildings and commercial properties. Traditional ADA audits require expensive consultants and time-consuming on-site assessments
+
+Passline lowers that barrier by guiding auditors through a simple, video-based inspection workflow.
+
+Auditors start on a dashboard where they can create a new audit or review past ones. To begin, they enter basic property information, building type, year built, and available features like parking and elevators. The tool then prompts the auditor to upload video walkthroughs of the property. Passline automatically classifies each space from the footage — identifying areas such as entrances, restrooms, corridors, parking lots, service counters, elevators, stairs, ramps, and signage, with no manual categorization required.
+
+Each classified space is analyzed against ADA standards. The system flags violations and warnings with specific ADA code citations (e.g., ADA Standards §404.2.3), estimated remediation costs, and detailed descriptions. Finally, a generated compliance report summarizes the findings with an overall compliance score and total cost range for remediation — printable as a PDF.
+
 ## Quick Start
 
 ### Backend
