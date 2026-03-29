@@ -220,6 +220,8 @@ Only runs when `module_type == "auto"` (all user-initiated audits).
 
 **34 room types** span: universal (entrance, hallway, restroom, parking, elevator, stairway, signage, drinking_fountain), dining, retail, office, medical, hotel, education, assembly.
 
+The classified `module_type` feeds into two places downstream: as the UI label shown to the user (and the room section header in the PDF), and as a direct input to Step 6 Pass B for **module-level rule generation**. This is the multimodal aspect of the pipeline — the same video produces both a feature list (Step 5A) and a room classification (Step 3), and compliance rules are generated independently from each.
+
 ---
 
 ### Step 4 — Reference Object Calibration
@@ -285,22 +287,33 @@ Result is stored as `gemini_analysis: {"features": [...]}` in MongoDB.
 ---
 
 ### Step 6 — Compliance Rule Evaluation
-**File:** `services/feature_rules.py → check_feature_compliance()`
+**File:** `services/feature_rules.py`
 **No external API — fully deterministic**
 
+Rule evaluation runs two passes driven by the two Gemini outputs from earlier steps, combining their results into the final violations list:
+
+#### Pass A — Feature-level rules (`check_feature_compliance()`)
 - Iterates all detected features from Step 5A
 - For each feature type, looks up matching rules in `FEATURE_RULES` dict
 - Calls each rule's `condition(properties)` lambda — returns `True` if violation applies
-- Generates a `Violation` Pydantic object for each triggered rule
+- Generates a `Violation` for each triggered rule
 
-**~35 rules** covering all 40 feature types, each with:
-- Condition lambda (e.g. `handle_type in ("round_knob", "knob")`)
+#### Pass B — Module-level rules (`check_module_compliance()`)
+- Uses the classified `module_type` from Step 3 (e.g. `"restroom"`, `"hallway"`)
+- Looks up the room type in `MODULE_RULES` dict — a separate rule set covering whole-room ADA requirements that may not be derivable from individual features alone
+- Applies rules for features that are expected to be present in that room type but were not detected (e.g. a restroom classification triggers rules for required grab bars even if no `grab_bar` feature was returned by Gemini)
+- Condition lambdas receive both the `module_type` and the full set of detected feature types, enabling absence-based violations
+
+**Combined output:** violations from both passes are merged, deduped by `(rule_id, feature_type)` if the same violation is triggered by both, then sorted by severity before being stored.
+
+**~35 feature rules** covering all 40 feature types + **~20 module rules** covering the 34 room types, each with:
+- Condition lambda
 - Severity: `critical | high | medium | low`
 - ADA citation (e.g. `ADA §404.2.7`)
 - Remediation cost range (e.g. `$75–$200`)
 - Finding text generator lambda
 
-The `Violation.module_type` field stores the **feature type** (e.g. `"door_hardware"`) rather than the room type, allowing per-feature attribution in the report.
+The `Violation.module_type` field stores the **feature type** for Pass A violations (e.g. `"door_hardware"`) and the **room type** for Pass B violations (e.g. `"restroom"`), allowing per-source attribution in the report.
 
 ---
 
@@ -436,8 +449,15 @@ React 19 StrictMode invokes `useEffect` twice in development. `VideoUploadPage` 
 ### Lazy Depth Model Loading
 `DepthEstimator` is instantiated inside the pipeline on first use (`app.state.depth_estimator = None` at startup). This avoids blocking the FastAPI lifespan with a multi-second PyTorch `torch.load` call.
 
-### Feature-Based vs Module-Based
-The current pipeline uses **feature-based detection**: one universal Gemini call identifies all features in the video regardless of room type. Earlier versions used separate Gemini schemas per module type (`MODULE_SCHEMAS`). The feature approach means room classification (Step 3) only affects the UI label, not the detection logic.
+### Multimodal Compliance Analysis
+The pipeline combines **two independent Gemini signals** to drive rule evaluation:
+
+1. **Feature detection** (Step 5A) — a universal Gemini call identifies every ADA-relevant element visible in the video frames, regardless of room type.
+2. **Room classification** (Step 3) — a separate Gemini call identifies the room type from the same frames.
+
+Both outputs feed Step 6 independently. Feature-level rules are evaluated against the detected elements; module-level rules are evaluated against the classified room type (e.g. a `restroom` classification triggers required-grab-bar checks even if no `grab_bar` feature was returned). This means a single video generates two complementary sets of violations that are merged into the final report.
+
+Earlier versions used separate Gemini schemas per module type (`MODULE_SCHEMAS`). The current approach replaces that with a single universal feature call plus a separate classification call, keeping detection logic decoupled from room type while still using the classification for whole-room rule coverage.
 
 ### CORS Configuration
 Frontend may run on ports 3000–3003 depending on what's available. All four origins are explicitly allowed in `main.py`.
