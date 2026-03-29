@@ -153,8 +153,7 @@ def generate_pdf(
     audit_id: str,
     facility: dict,
     report: dict,
-    violations_with_narratives: List[dict],
-    module_frames: dict,
+    module_groups: List[dict],
 ) -> str:
     """
     Generate PDF report. Returns relative path to PDF file.
@@ -241,36 +240,52 @@ def generate_pdf(
         story.append(t2)
         story.append(PageBreak())
 
-        # --- Violations ---
-        story.append(Paragraph("Violations", h2_style))
+        # --- Violations by Room ---
+        story.append(Paragraph("Violations by Room", h2_style))
         story.append(HRFlowable(width="100%", thickness=1))
-        story.append(Spacer(1, 0.1 * inch))
+        story.append(Spacer(1, 0.15 * inch))
 
-        for v in violations_with_narratives:
-            sev = v.get("severity", "low")
-            sev_color = SEVERITY_COLORS.get(sev, colors.grey)
+        for mg in module_groups:
+            module_type = mg.get("module_type", "unknown")
+            room_label = mg.get("room_name") or module_type.replace("_", " ").title()
+            violations = mg.get("violations", [])
 
-            sev_style = ParagraphStyle(
-                "sev", parent=h3_style, textColor=sev_color
+            # Room header
+            room_style = ParagraphStyle(
+                "room", parent=h2_style, fontSize=13,
+                textColor=colors.HexColor("#1e40af"),
+                spaceBefore=12, spaceAfter=4,
             )
-            story.append(Paragraph(
-                f"[{sev.upper()}] {v.get('element', '')} — {v.get('code', '')}",
-                sev_style,
-            ))
-            story.append(Paragraph(f"<b>Finding:</b> {v.get('finding', '')}", body_style))
-            if v.get("description"):
-                story.append(Paragraph(f"<b>Description:</b> {v['description']}", body_style))
-            if v.get("remediation"):
-                story.append(Paragraph(f"<b>Remediation:</b> {v['remediation']}", body_style))
-            if v.get("priority_rationale"):
-                story.append(Paragraph(f"<b>Priority:</b> {v['priority_rationale']}", body_style))
-            cost = v.get("remediation_cost", {})
-            story.append(Paragraph(
-                f"<b>Estimated Cost:</b> ${cost.get('low', 0):,.0f} – ${cost.get('high', 0):,.0f}",
-                body_style,
-            ))
-            story.append(Spacer(1, 0.15 * inch))
-            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.lightgrey))
+            story.append(Paragraph(room_label, room_style))
+            if not violations:
+                story.append(Paragraph("No violations found in this room.", body_style))
+                story.append(Spacer(1, 0.1 * inch))
+                continue
+
+            for v in violations:
+                sev = v.get("severity", "low")
+                sev_color = SEVERITY_COLORS.get(sev, colors.grey)
+                sev_style = ParagraphStyle("sev", parent=h3_style, textColor=sev_color)
+                story.append(Paragraph(
+                    f"[{sev.upper()}] {v.get('element', '')} — {v.get('code', '')}",
+                    sev_style,
+                ))
+                story.append(Paragraph(f"<b>Finding:</b> {v.get('finding', '')}", body_style))
+                if v.get("description"):
+                    story.append(Paragraph(f"<b>Description:</b> {v['description']}", body_style))
+                if v.get("remediation"):
+                    story.append(Paragraph(f"<b>Remediation:</b> {v['remediation']}", body_style))
+                if v.get("priority_rationale"):
+                    story.append(Paragraph(f"<b>Priority:</b> {v['priority_rationale']}", body_style))
+                cost = v.get("remediation_cost", {})
+                story.append(Paragraph(
+                    f"<b>Estimated Cost:</b> ${cost.get('low', 0):,.0f} – ${cost.get('high', 0):,.0f}",
+                    body_style,
+                ))
+                story.append(Spacer(1, 0.12 * inch))
+                story.append(HRFlowable(width="100%", thickness=0.5, color=colors.lightgrey))
+                story.append(Spacer(1, 0.08 * inch))
+
             story.append(Spacer(1, 0.1 * inch))
 
         doc.build(story)
@@ -296,74 +311,88 @@ async def generate_report(
 ) -> dict:
     """
     Full report generation pipeline.
-    Updates the audit document in MongoDB and returns the report dict.
+    Violations are kept per-module — no deduplication. The same violation
+    type appearing in two rooms is listed under each room separately.
     """
     facility = audit_doc.get("facility", {})
     modules = audit_doc.get("modules", [])
     applicable_rules = audit_doc.get("applicable_rules", [])
 
-    # Collect all violations from completed modules
+    # Build per-module violation groups (preserve all, no dedup)
+    module_groups = []
     all_violations = []
     for m in modules:
-        if m.get("status") == "complete":
-            all_violations.extend(m.get("violations", []))
+        if m.get("status") != "complete":
+            continue
+        mvs = sort_violations(m.get("violations", []))
+        module_groups.append({
+            "module_id": m["module_id"],
+            "module_type": m.get("module_type", "unknown"),
+            "room_name": m.get("room_name"),
+            "violations": mvs,
+        })
+        all_violations.extend(mvs)
 
-    # Deduplicate and sort
-    deduped = deduplicate_violations(all_violations)
-    sorted_violations = sort_violations(deduped)
-
-    # Score
+    # Score across all violations (no dedup)
     total_checks = len(applicable_rules)
-    score = compute_score(sorted_violations, total_checks)
-    cost_total = sum_remediation(sorted_violations)
-    critical_count = sum(1 for v in sorted_violations if v.get("severity") == "critical")
+    score = compute_score(all_violations, total_checks)
+    cost_total = sum_remediation(all_violations)
+    critical_count = sum(1 for v in all_violations if v.get("severity") == "critical")
 
-    # Generate narratives with Claude
-    logger.info(f"Generating Claude narratives for {len(sorted_violations)} violations...")
+    # Generate narratives for every violation
+    logger.info(f"Generating narratives for {len(all_violations)} violations...")
     try:
-        violations_with_narratives = await generate_narratives(sorted_violations, facility)
+        all_with_narratives = await generate_narratives(all_violations, facility)
     except Exception as e:
-        logger.error(f"Claude narrative generation failed: {e}. Using raw violations.")
-        violations_with_narratives = [
+        logger.error(f"Narrative generation failed: {e}. Using raw violations.")
+        all_with_narratives = [
             {**v, "description": v.get("finding", ""), "remediation": "", "priority_rationale": ""}
-            for v in sorted_violations
+            for v in all_violations
         ]
 
-    # Collect annotated frames per module
-    module_frames = {
-        m["module_id"]: {
-            "annotated": m.get("annotated_frames", []),
-            "depth": m.get("depth_map_frames", []),
+    # Re-attach narratives back to per-module groups
+    narrative_by_id = {v["violation_id"]: v for v in all_with_narratives}
+    module_groups_with_narratives = [
+        {
+            **mg,
+            "violations": [narrative_by_id.get(v["violation_id"], v) for v in mg["violations"]],
         }
-        for m in modules
-    }
+        for mg in module_groups
+    ]
 
     # Generate PDF
     generated_at = datetime.utcnow().isoformat()
     report_partial = {
         "overall_score": score,
-        "total_violations": len(sorted_violations),
+        "total_violations": len(all_violations),
         "critical_violations": critical_count,
-        "modules_audited": len([m for m in modules if m.get("status") == "complete"]),
+        "modules_audited": len(module_groups),
         "estimated_remediation_total": cost_total,
         "generated_at": generated_at,
         "pdf_path": None,
     }
 
     pdf_name = generate_pdf(
-        audit_id, facility, report_partial, violations_with_narratives, module_frames
+        audit_id, facility, report_partial, module_groups_with_narratives
     )
     report_partial["pdf_path"] = pdf_name or None
+
+    # Flat list for API response (preserves all violations in order)
+    flat_violations = [v for mg in module_groups_with_narratives for v in mg["violations"]]
 
     # Persist to MongoDB
     await db["audits"].update_one(
         {"audit_id": audit_id},
         {
             "$set": {
-                "report": {**report_partial, "violations": violations_with_narratives},
+                "report": {
+                    **report_partial,
+                    "violations": flat_violations,
+                    "module_violations": module_groups_with_narratives,
+                },
                 "updated_at": datetime.utcnow().isoformat(),
             }
         },
     )
 
-    return {**report_partial, "violations": violations_with_narratives}
+    return {**report_partial, "violations": flat_violations, "module_violations": module_groups_with_narratives}

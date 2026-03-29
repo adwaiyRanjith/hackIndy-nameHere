@@ -26,7 +26,7 @@ function DashboardPage() {
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <button className="dashboard-logo" onClick={() => navigate('/audit-choice')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}>
+        <button className="dashboard-logo" onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}>
           <span className="logo-icon">&#10003;</span>
           <span className="logo-text">Passline</span>
         </button>

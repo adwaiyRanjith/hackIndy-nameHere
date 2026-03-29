@@ -35,76 +35,113 @@ const MODULE_ICONS = {
   assembly_seating: '🎪', stage: '🎤', ticket_booth: '🎟️',
 };
 
-function parseCostRange(str) {
-  if (!str) return [0, 0];
-  const nums = str.replace(/[$,]/g, '').match(/\d+/g);
-  if (!nums) return [0, 0];
-  return [parseInt(nums[0]), parseInt(nums[nums.length - 1])];
+// critical/high → violation badge, medium/low → warning badge
+function sevBadge(severity) {
+  return (severity === 'critical' || severity === 'high') ? 'violation' : 'warning';
+}
+
+function roomLabel(mg) {
+  if (mg.room_name && mg.room_name.trim()) return mg.room_name.trim();
+  const type = mg.module_type || '';
+  return MODULE_LABELS[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Unknown Room';
+}
+
+function roomIcon(mg) {
+  return MODULE_ICONS[mg.module_type] || '📷';
+}
+
+function formatCost(v) {
+  const low = v.remediation_cost?.low ?? 0;
+  const high = v.remediation_cost?.high ?? 0;
+  if (!low && !high) return 'Contact contractor for estimate';
+  return `$${Math.round(low).toLocaleString()} – $${Math.round(high).toLocaleString()}`;
 }
 
 function ReportPage() {
   const navigate = useNavigate();
+  const [reportData, setReportData] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
+  const [generating, setGenerating] = useState(true);
   const survey = JSON.parse(localStorage.getItem('surveyAnswers') || '{}');
-  const auditModules = JSON.parse(localStorage.getItem('auditModules') || '{}');
-
-  useEffect(() => {
-    const auditId = localStorage.getItem('auditId');
-    if (!auditId) return;
-
-    triggerReport(auditId)
-      .then(() => {
-        // Poll until PDF is ready
-        const interval = setInterval(async () => {
-          try {
-            const report = await getReport(auditId);
-            if (report.pdf_url) {
-              setPdfUrl(`http://localhost:8000${report.pdf_url}`);
-              clearInterval(interval);
-            }
-          } catch {
-            // report not ready yet, keep polling
-          }
-        }, 3000);
-        // Stop polling after 2 minutes
-        setTimeout(() => clearInterval(interval), 120000);
-      })
-      .catch((err) => console.error('Failed to trigger report:', err));
-  }, []);
+  const auditId = localStorage.getItem('auditId');
   const userName = localStorage.getItem('userName') || 'Auditor';
 
-  const completedModules = Object.entries(auditModules).filter(
-    ([, data]) => data.status === 'complete'
-  );
+  useEffect(() => {
+    if (!auditId) { setGenerating(false); return; }
+    let cancelled = false;
+    let intervalId = null;
+    let timeoutId = null;
 
-  const allFindings = completedModules.flatMap(([moduleId, data]) =>
-    (data.findings || []).map((f) => ({ ...f, moduleId }))
-  );
+    async function run() {
+      // Record the time we trigger so we only accept a freshly-generated report.
+      const triggeredAt = new Date();
+      try {
+        await triggerReport(auditId);
+      } catch (err) {
+        console.error('trigger report:', err);
+      }
 
-  const violations = allFindings.filter((f) => f.severity === 'violation');
-  const warnings = allFindings.filter((f) => f.severity === 'warning');
+      async function poll() {
+        try {
+          const report = await getReport(auditId);
+          if (cancelled) return;
+          // Accept only a report generated after we triggered it.
+          const reportTime = report.generated_at ? new Date(report.generated_at) : null;
+          const isFresh = reportTime && reportTime >= triggeredAt;
+          if (isFresh) {
+            setReportData(report);
+            setGenerating(false);
+            if (report.pdf_url) setPdfUrl(`http://localhost:8000${report.pdf_url}`);
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+          }
+        } catch {
+          // not ready yet — keep polling
+        }
+      }
 
-  let totalLow = 0;
-  let totalHigh = 0;
-  allFindings.forEach((f) => {
-    const [lo, hi] = parseCostRange(f.estimatedCost);
-    totalLow += lo;
-    totalHigh += hi;
-  });
+      poll();
+      intervalId = setInterval(poll, 3000);
+      // Fallback: show whatever we have after 2 minutes
+      timeoutId = setTimeout(async () => {
+        clearInterval(intervalId);
+        if (cancelled) return;
+        try {
+          const report = await getReport(auditId);
+          if (!cancelled) { setReportData(report); }
+        } catch { /* ignore */ }
+        if (!cancelled) setGenerating(false);
+      }, 120000);
+    }
 
-  const complianceScore =
-    allFindings.length === 0
-      ? 100
-      : Math.max(0, Math.round(100 - violations.length * 18 - warnings.length * 6));
+    run();
+    return () => { cancelled = true; clearInterval(intervalId); clearTimeout(timeoutId); };
+  }, [auditId]);
 
-  const scoreColor =
-    complianceScore >= 75 ? '#34c759' : complianceScore >= 45 ? '#ffd60a' : '#ff453a';
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const today = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  if (generating || !reportData) {
+    return (
+      <div className="report-container">
+        <div className="report-header">
+          <div className="report-logo">
+            <span className="logo-icon">&#10003;</span>
+            <span className="logo-text">Passline</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', paddingTop: '80px', color: 'var(--overlay0)' }}>
+          Generating report…
+        </div>
+      </div>
+    );
+  }
+
+  const moduleGroups = reportData.module_violations || [];
+  const totalViolations = reportData.total_violations || 0;
+  const totalWarnings = (reportData.violations || []).filter(v => sevBadge(v.severity) === 'warning').length;
+  const costTotal = reportData.estimated_remediation_total || { low: 0, high: 0 };
+  const score = reportData.overall_score ?? 100;
+  const scoreColor = score >= 75 ? '#34c759' : score >= 45 ? '#ffd60a' : '#ff453a';
 
   return (
     <div className="report-container">
@@ -123,8 +160,8 @@ function ReportPage() {
           <div>
             <h1 className="report-title">ADA Compliance Report</h1>
             <p className="report-business">
-              {survey.businessName || 'Property Audit'}{' '}
-              {survey.city && survey.state ? `— ${survey.city}, ${survey.state}` : ''}
+              {survey.businessName || 'Property Audit'}
+              {survey.city && survey.state ? ` — ${survey.city}, ${survey.state}` : ''}
             </p>
             <p className="report-date">
               Prepared by {userName} &middot; {today}
@@ -134,102 +171,113 @@ function ReportPage() {
 
         <div className="score-row">
           <div className="score-card">
-            <div className="score-number" style={{ color: scoreColor }}>
-              {complianceScore}
-            </div>
+            <div className="score-number" style={{ color: scoreColor }}>{score}</div>
             <div className="score-label">Compliance Score</div>
             <div className="score-sub">out of 100</div>
           </div>
           <div className="score-stats">
             <div className="stat-item">
-              <span className="stat-number stat-violation">{violations.length}</span>
+              <span className="stat-number stat-violation">{totalViolations}</span>
               <span className="stat-label">Violations</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-number stat-warning">{warnings.length}</span>
+              <span className="stat-number stat-warning">{totalWarnings}</span>
               <span className="stat-label">Warnings</span>
             </div>
             <div className="stat-divider" />
             <div className="stat-item">
-              <span className="stat-number">{completedModules.length}</span>
-              <span className="stat-label">Modules Audited</span>
+              <span className="stat-number">{moduleGroups.length}</span>
+              <span className="stat-label">Rooms Audited</span>
             </div>
           </div>
         </div>
 
-        {allFindings.length > 0 && (
+        {(costTotal.low > 0 || costTotal.high > 0) && (
           <div className="cost-banner">
             <span className="cost-label">Estimated Remediation Cost</span>
             <span className="cost-range">
-              ${totalLow.toLocaleString()} – ${totalHigh.toLocaleString()}
+              ${Math.round(costTotal.low).toLocaleString()} – ${Math.round(costTotal.high).toLocaleString()}
             </span>
           </div>
         )}
 
-        {allFindings.length === 0 ? (
-          <div className="pass-banner">
-            <span className="pass-icon">&#10003;</span>
-            <div>
-              <strong>No violations found!</strong>
-              <p>This property appears to meet ADA standards for all audited modules.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="findings-section">
-            <h2 className="section-heading">Findings by Module</h2>
-            {completedModules.map(([moduleId, data]) => {
-              const findings = data.findings || [];
-              if (findings.length === 0) return (
-                <div className="module-section" key={moduleId}>
-                  <div className="module-section-header">
-                    <span className="module-section-icon">{MODULE_ICONS[moduleId]}</span>
-                    <span className="module-section-label">{MODULE_LABELS[moduleId] || moduleId}</span>
+        <div className="findings-section">
+          <h2 className="section-heading">Findings by Room</h2>
+
+          {moduleGroups.map((mg) => {
+            const violations = (mg.violations || []).filter(v => sevBadge(v.severity) === 'violation');
+            const warnings = (mg.violations || []).filter(v => sevBadge(v.severity) === 'warning');
+            const isCompliant = mg.violations.length === 0;
+            const label = roomLabel(mg);
+            const icon = roomIcon(mg);
+            const shortId = mg.module_id ? mg.module_id.slice(0, 8) : '';
+
+            return (
+              <div className="module-section" key={mg.module_id}>
+                <div className="module-section-header">
+                  <span className="module-section-icon">{icon}</span>
+                  <span className="module-section-label">{label}</span>
+                  {isCompliant ? (
                     <span className="module-pass-badge">&#10003; Compliant</span>
-                  </div>
-                </div>
-              );
-              return (
-                <div className="module-section" key={moduleId}>
-                  <div className="module-section-header">
-                    <span className="module-section-icon">{MODULE_ICONS[moduleId]}</span>
-                    <span className="module-section-label">{MODULE_LABELS[moduleId] || moduleId}</span>
+                  ) : (
                     <span className="module-count">
-                      {findings.filter(f => f.severity === 'violation').length} violation{findings.filter(f => f.severity === 'violation').length !== 1 ? 's' : ''},&nbsp;
-                      {findings.filter(f => f.severity === 'warning').length} warning{findings.filter(f => f.severity === 'warning').length !== 1 ? 's' : ''}
+                      {violations.length > 0 && `${violations.length} violation${violations.length !== 1 ? 's' : ''}`}
+                      {violations.length > 0 && warnings.length > 0 && ', '}
+                      {warnings.length > 0 && `${warnings.length} warning${warnings.length !== 1 ? 's' : ''}`}
                     </span>
-                  </div>
-                  <div className="module-findings">
-                    {findings.map((f) => (
-                      <div key={f.id} className={`report-finding finding-${f.severity}`}>
-                        <div className="rf-top">
-                          <span className={`rf-badge badge-${f.severity}`}>
-                            {f.severity === 'violation' ? 'Violation' : 'Warning'}
-                          </span>
-                          <span className="rf-citation">{f.citation}</span>
-                        </div>
-                        <div className="rf-title">{f.title}</div>
-                        <div className="rf-detail">{f.detail}</div>
-                        <div className="rf-cost">
-                          Estimated fix cost: <strong>{f.estimatedCost}</strong>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  )}
+                  {shortId && <span className="module-id-badge">{shortId}</span>}
                 </div>
-              );
-            })}
-          </div>
-        )}
+
+                {!isCompliant && (
+                  <div className="module-findings">
+                    {mg.violations.map((v, i) => {
+                      const badge = sevBadge(v.severity);
+                      const title = v.element ? `${v.element}: ${v.finding}` : v.finding;
+                      return (
+                        <div key={v.violation_id || i} className={`report-finding finding-${badge}`}>
+                          <div className="rf-top">
+                            <span className={`rf-badge badge-${badge}`}>
+                              {badge === 'violation' ? 'Violation' : 'Warning'}
+                            </span>
+                            <span className="rf-citation">{v.code || ''}</span>
+                          </div>
+                          <div className="rf-title">{title}</div>
+                          {v.description && <div className="rf-detail">{v.description}</div>}
+                          {v.remediation && (
+                            <div className="rf-detail" style={{ marginTop: '4px', fontStyle: 'italic' }}>
+                              {v.remediation}
+                            </div>
+                          )}
+                          <div className="rf-cost">
+                            Estimated fix cost: <strong>{formatCost(v)}</strong>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {moduleGroups.length > 0 && totalViolations === 0 && (
+            <div className="pass-banner">
+              <span className="pass-icon">&#10003;</span>
+              <div>
+                <strong>No violations found!</strong>
+                <p>This property appears to meet ADA standards for all audited rooms.</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="report-actions">
           <button className="action-btn btn-secondary" onClick={() => navigate('/modules')}>
             Continue Auditing
           </button>
-          <button
-            className="action-btn btn-primary"
-            onClick={() => window.print()}
-          >
+          <button className="action-btn btn-primary" onClick={() => window.print()}>
             &#128438; Save / Print Report
           </button>
           {pdfUrl && (

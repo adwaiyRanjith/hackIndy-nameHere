@@ -711,6 +711,13 @@ function VideoUploadPage() {
   return (
     <div className="video-container">
       <div className="video-header">
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0, marginRight: '16px' }}
+        >
+          <span className="logo-icon">&#10003;</span>
+          <span className="logo-text">Passline</span>
+        </button>
         <button className="back-btn" onClick={() => navigate('/modules')}>
           &#8249; Back to Modules
         </button>

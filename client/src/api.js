@@ -55,6 +55,16 @@ export async function getModuleResults(auditId, moduleId) {
   return res.json(); // { violations, ... }
 }
 
+export async function renameModule(auditId, moduleId, roomName) {
+  const res = await fetch(`${BASE_URL}/audits/${auditId}/modules/${moduleId}/name`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ room_name: roomName }),
+  });
+  if (!res.ok) throw new Error('Failed to rename module');
+  return res.json();
+}
+
 export async function triggerReport(auditId) {
   const res = await fetch(`${BASE_URL}/audits/${auditId}/report`, { method: 'POST' });
   if (!res.ok) throw new Error('Failed to trigger report');

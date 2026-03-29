@@ -280,6 +280,17 @@
   color: var(--overlay0);
 }
 
+.module-id-badge {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-family: monospace;
+  color: var(--overlay1);
+  background: var(--surface1);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
 .module-findings {
   display: flex;
   flex-direction: column;

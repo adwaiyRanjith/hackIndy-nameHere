@@ -10,7 +10,7 @@ function StartPage() {
     e.preventDefault();
     if (!name.trim()) return;
     localStorage.setItem('userName', name.trim());
-    navigate('/audit-choice', { state: { name: name.trim() } });
+    navigate('/dashboard');
   };
 
   return (

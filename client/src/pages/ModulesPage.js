@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ModulesPage.css';
-import { getAudit, createModule } from '../api';
+import { getAudit, createModule, renameModule } from '../api';
 
 const MODULE_META = {
   entrance:          { label: 'Entrance & Doorways',       icon: '🚪' },
@@ -49,6 +49,8 @@ function ModulesPage() {
   const [modules, setModules] = useState([]); // raw backend module docs
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editingName, setEditingName] = useState('');
 
   useEffect(() => {
     if (!auditId) {
@@ -104,6 +106,25 @@ function ModulesPage() {
     }
   };
 
+  const handleStartRename = (m) => {
+    setEditingId(m.module_id);
+    setEditingName(m.room_name || '');
+  };
+
+  const handleSaveRename = async (moduleId) => {
+    const name = editingName.trim();
+    setEditingId(null);
+    if (!auditId) return;
+    try {
+      await renameModule(auditId, moduleId, name);
+      setModules((prev) =>
+        prev.map((m) => m.module_id === moduleId ? { ...m, room_name: name } : m)
+      );
+    } catch (err) {
+      console.error('Failed to rename module:', err);
+    }
+  };
+
   const completedCount = modules.filter((m) => m.status === 'complete').length;
   const activeStatuses = ['extracting_frames', 'classifying', 'analyzing', 'checking_compliance'];
   const inProgressCount = modules.filter((m) => activeStatuses.includes(m.status)).length;
@@ -129,7 +150,7 @@ function ModulesPage() {
       <div className="modules-header">
         <button
           className="modules-logo"
-          onClick={() => navigate('/audit-choice')}
+          onClick={() => navigate('/dashboard')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}
         >
           <span className="logo-icon">&#10003;</span>
@@ -183,7 +204,43 @@ function ModulesPage() {
                     {isProcessing && !isComplete ? '⏳' : meta.icon}
                   </div>
                   <div className="module-info">
-                    <div className="module-label">{meta.label}</div>
+                    <div className="module-label">
+                      {editingId === m.module_id ? (
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onBlur={() => handleSaveRename(m.module_id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRename(m.module_id);
+                            if (e.key === 'Escape') setEditingId(null);
+                          }}
+                          style={{
+                            fontSize: 'inherit', fontFamily: 'inherit', fontWeight: 'inherit',
+                            background: 'var(--surface1)', color: 'var(--text)',
+                            border: '1px solid var(--overlay0)', borderRadius: '4px',
+                            padding: '2px 6px', width: '100%', boxSizing: 'border-box',
+                          }}
+                        />
+                      ) : (
+                        <>
+                          {m.room_name || meta.label}
+                          {!isProcessing && (
+                            <button
+                              onClick={() => handleStartRename(m)}
+                              title="Rename room"
+                              style={{
+                                marginLeft: '6px', background: 'none', border: 'none',
+                                cursor: 'pointer', color: 'var(--overlay1)', fontSize: '0.75rem',
+                                padding: '0 2px', verticalAlign: 'middle',
+                              }}
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                     {isComplete && violationCount > 0 && (
                       <div style={{ marginTop: '4px', fontSize: '0.72rem', color: 'var(--red)' }}>
                         {violationCount} violation{violationCount !== 1 ? 's' : ''} found

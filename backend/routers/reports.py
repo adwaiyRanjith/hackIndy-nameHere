@@ -50,7 +50,9 @@ async def get_report(audit_id: str, request: Request):
         "critical_violations": report.get("critical_violations", 0),
         "modules_audited": report.get("modules_audited", 0),
         "violations": report.get("violations", []),
+        "module_violations": report.get("module_violations", []),
         "estimated_remediation_total": report.get("estimated_remediation_total", {"low": 0, "high": 0}),
+        "generated_at": report.get("generated_at"),
         "pdf_url": f"/reports/{pdf_path}" if pdf_path else None,
     }
 

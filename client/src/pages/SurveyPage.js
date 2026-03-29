@@ -130,6 +130,16 @@ function SurveyPage() {
 
   return (
     <div className="survey-container">
+      <div className="survey-page-header">
+        <button
+          onClick={() => navigate('/dashboard')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', padding: 0 }}
+        >
+          <span className="logo-icon">&#10003;</span>
+          <span className="logo-text">Passline</span>
+        </button>
+      </div>
+      <div className="survey-body">
       <div className="survey-card">
         <div className="survey-top">
           <button className="back-btn" onClick={handleBack}>
@@ -274,6 +284,7 @@ function SurveyPage() {
         >
           {step < STEPS.length - 1 ? 'Continue' : 'Start Audit'}
         </button>
+      </div>
       </div>
     </div>
   );

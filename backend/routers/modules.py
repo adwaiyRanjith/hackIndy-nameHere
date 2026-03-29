@@ -10,12 +10,16 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Request, Up
 from fastapi.responses import JSONResponse
 
 from config import UPLOAD_DIR, FRAMES_DIR, MODULE_INSTRUCTIONS
+from pydantic import BaseModel
 from models.audit import CreateModuleRequest, CreateModuleResponse, ModuleStatusResponse
+
+class RenameModuleRequest(BaseModel):
+    room_name: str
 from services.video_processing import extract_key_frames, VideoProcessingError
 from services.calibration import calibrate_frames
 from services.depth_estimation import process_frames_depth
-from services.gemini_analysis import analyze_module, classify_room, get_default_result
-from services.compliance_checker import check_module_compliance
+from services.gemini_analysis import analyze_features, classify_room, get_default_result
+from services.feature_rules import check_feature_compliance
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -65,6 +69,27 @@ async def create_module(
     )
 
     return CreateModuleResponse(module_id=module_id, instructions=instructions)
+
+
+# ---------------------------------------------------------------------------
+# PATCH /audits/{audit_id}/modules/{module_id}/name
+# ---------------------------------------------------------------------------
+
+@router.patch("/audits/{audit_id}/modules/{module_id}/name")
+async def rename_module(
+    audit_id: str,
+    module_id: str,
+    body: RenameModuleRequest,
+    request: Request,
+):
+    db = request.app.state.db
+    audit = await db["audits"].find_one({"audit_id": audit_id})
+    if not audit:
+        raise HTTPException(status_code=404, detail="Audit not found")
+    if not _find_module(audit, module_id):
+        raise HTTPException(status_code=404, detail="Module not found")
+    await _update_module(db, audit_id, module_id, {"room_name": body.room_name.strip()})
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------
@@ -216,13 +241,18 @@ async def run_processing_pipeline(
         from services.calibration import calibrate_frames
         calibration = calibrate_frames(frames_bgr)
 
-        # --- Step 5A: Gemini analysis ---
+        # --- Step 5A: Gemini feature detection ---
         await _update_module(db, audit_id, module_id, {"progress": 40})
         try:
-            gemini_result = await analyze_module(module_type, frame_paths)
+            features_result = await analyze_features(frame_paths)
         except Exception as e:
-            logger.error(f"Gemini analysis failed: {e}. Using defaults.")
-            gemini_result = get_default_result(module_type)
+            logger.error(f"Gemini feature detection failed: {e}. Using defaults.")
+            features_result = get_default_result()
+
+        features = features_result.get("features", [])
+        await _update_module(db, audit_id, module_id, {
+            "gemini_analysis": features_result, "progress": 55
+        })
 
         # --- Step 5B: Depth estimation ---
         await _update_module(db, audit_id, module_id, {"progress": 60})
@@ -231,7 +261,7 @@ async def run_processing_pipeline(
             depth_estimator = DepthEstimator()
 
         depth_result = process_frames_depth(
-            frame_paths, audit_id, module_id, depth_estimator, gemini_result, calibration
+            frame_paths, audit_id, module_id, depth_estimator, features_result, calibration
         )
         measurements = depth_result["measurements"]
         depth_map_frames = depth_result["depth_map_frames"]
@@ -239,26 +269,19 @@ async def run_processing_pipeline(
         # --- Annotated frames ---
         await _update_module(db, audit_id, module_id, {"progress": 75})
         annotated_frames = _generate_annotated_frames(
-            frame_paths, audit_id, module_id, gemini_result
+            frame_paths, audit_id, module_id, features_result
         )
 
         # --- Step 6: Compliance check ---
         await _update_module(db, audit_id, module_id, {
             "status": "checking_compliance", "progress": 85
         })
-        audit = await db["audits"].find_one({"audit_id": audit_id})
-        applicable_rules = audit.get("applicable_rules", [])
-        facility = audit.get("facility", {})
 
-        violations = check_module_compliance(
-            module_type=module_type,
+        violations = check_feature_compliance(
+            features=features,
             module_id=module_id,
-            gemini_result=gemini_result,
             depth_measurements=measurements,
-            applicable_rule_ids=applicable_rules,
             calibrated=calibration["calibrated"],
-            state=facility.get("state", "federal"),
-            questionnaire=facility,
         )
 
         violations_dicts = [v.model_dump() for v in violations]
@@ -267,7 +290,7 @@ async def run_processing_pipeline(
         await _update_module(db, audit_id, module_id, {
             "status": "complete",
             "progress": 100,
-            "gemini_analysis": gemini_result,
+            "gemini_analysis": features_result,
             "depth_measurements": measurements,
             "calibrated": calibration["calibrated"],
             "violations": violations_dicts,
@@ -304,6 +327,44 @@ def _generate_annotated_frames(
     annotated = []
     out_dir = FRAMES_DIR / audit_id / module_id
 
+    # Group features by frame_index
+    features = gemini_result.get("features", [])
+    features_by_frame: dict[int, list] = {}
+    for f in features:
+        idx = f.get("frame_index", 0)
+        features_by_frame.setdefault(idx, []).append(f)
+
+    # Color palette per feature type (cycles through a fixed set)
+    _COLORS = [
+        (0, 255, 0),    # green
+        (255, 165, 0),  # orange
+        (0, 200, 255),  # cyan
+        (255, 0, 128),  # pink
+        (128, 0, 255),  # purple
+        (0, 255, 180),  # teal
+        (255, 220, 0),  # yellow
+        (200, 100, 0),  # brown
+    ]
+    _type_colors: dict[str, tuple] = {}
+
+    def _color_for(ftype: str) -> tuple:
+        if ftype not in _type_colors:
+            _type_colors[ftype] = _COLORS[len(_type_colors) % len(_COLORS)]
+        return _type_colors[ftype]
+
+    def _bbox_coords(bbox, img_w, img_h):
+        if not bbox:
+            return None
+        try:
+            return (
+                int(float(bbox["x1"]) * img_w),
+                int(float(bbox["y1"]) * img_h),
+                int(float(bbox["x2"]) * img_w),
+                int(float(bbox["y2"]) * img_h),
+            )
+        except (TypeError, ValueError, KeyError):
+            return None
+
     for i, rel_path in enumerate(frame_paths):
         full_path = FRAMES_DIR / rel_path
         img = cv2.imread(str(full_path))
@@ -312,34 +373,24 @@ def _generate_annotated_frames(
 
         h, w = img.shape[:2]
 
-        def _bbox_coords(bbox, img_w, img_h):
-            try:
-                return (
-                    int(float(bbox["x1"]) * img_w),
-                    int(float(bbox["y1"]) * img_h),
-                    int(float(bbox["x2"]) * img_w),
-                    int(float(bbox["y2"]) * img_h),
-                )
-            except (TypeError, ValueError):
-                return None
+        for feature in features_by_frame.get(i, []):
+            ftype = feature.get("feature_type", "feature")
+            bbox = feature.get("bounding_box")
+            color = _color_for(ftype)
+            label = ftype.replace("_", " ")
 
-        # Draw door bounding box if present
-        bbox = gemini_result.get("door_bounding_box")
-        if bbox:
             coords = _bbox_coords(bbox, w, h)
             if coords:
                 x1, y1, x2, y2 = coords
-                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(img, "Door", (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-        # Draw clearance bounding box if present
-        cbbox = gemini_result.get("clearance_bounding_box")
-        if cbbox:
-            coords = _bbox_coords(cbbox, w, h)
-            if coords:
-                x1, y1, x2, y2 = coords
-                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 165, 0), 2)
-                cv2.putText(img, "Clearance", (x1, y1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 165, 0), 2)
+                cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+                # Label background for readability
+                (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)
+                cv2.rectangle(img, (x1, y1 - th - 6), (x1 + tw + 4, y1), color, -1)
+                cv2.putText(img, label, (x1 + 2, y1 - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 1)
+            else:
+                # No bbox — print label in top-left corner area, stacked
+                y_offset = 20 + list(features_by_frame.get(i, [])).index(feature) * 22
+                cv2.putText(img, label, (8, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
 
         ann_name = f"annotated_{i + 1:03d}.jpg"
         ann_path = out_dir / ann_name
