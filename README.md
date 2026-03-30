@@ -120,3 +120,7 @@ Violations from both passes are merged and deduplicated into a single list per r
 2. **Good**: No reference, metric depth model → flagged as "estimated"
 3. **Fallback**: Gemini relative classifications only → flagged as "screening estimate"
 4. **Demo floor**: Feature-presence rules only (no measurements needed)
+
+## AI Usage
+
+Anthropic Claude Code (Opus 4.6) was used for integration of front and backend, construction of README.md and SPEC.md, backend construction, and various bug fixes.
